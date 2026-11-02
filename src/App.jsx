@@ -17,7 +17,7 @@ import Divider from './components/Divider.jsx'
 const KEY = 'ep-invitation-opened'
 const wasOpened = () => {
   try {
-    return sessionStorage.getItem(KEY) === '1'
+    return localStorage.getItem(KEY) === '1'
   } catch {
     return false
   }
@@ -30,7 +30,7 @@ export default function App() {
   const finish = useCallback(() => {
     setOpened(true)
     try {
-      sessionStorage.setItem(KEY, '1')
+      localStorage.setItem(KEY, '1')
     } catch {
       /* the invitation simply opens again next time */
     }
@@ -38,7 +38,7 @@ export default function App() {
 
   const replay = useCallback(() => {
     try {
-      sessionStorage.removeItem(KEY)
+      localStorage.removeItem(KEY)
     } catch {
       /* nothing to clear */
     }
