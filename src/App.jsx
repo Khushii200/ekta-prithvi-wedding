@@ -14,34 +14,19 @@ import MusicPlayer from './components/MusicPlayer.jsx'
 import Petals from './components/Petals.jsx'
 import Divider from './components/Divider.jsx'
 
-const KEY = 'ep-invitation-opened'
-const wasOpened = () => {
-  try {
-    return localStorage.getItem(KEY) === '1'
-  } catch {
-    return false
-  }
-}
+// Every load starts at the envelope, so the browser must not restore the old scroll position.
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
 
 export default function App() {
-  const [opened, setOpened] = useState(wasOpened)
+  const [opened, setOpened] = useState(false)
   const mainRef = useRef(null)
 
   const finish = useCallback(() => {
+    window.scrollTo(0, 0)
     setOpened(true)
-    try {
-      localStorage.setItem(KEY, '1')
-    } catch {
-      /* the invitation simply opens again next time */
-    }
   }, [])
 
   const replay = useCallback(() => {
-    try {
-      localStorage.removeItem(KEY)
-    } catch {
-      /* nothing to clear */
-    }
     window.scrollTo(0, 0)
     setOpened(false)
   }, [])
