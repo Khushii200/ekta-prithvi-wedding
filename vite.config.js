@@ -4,6 +4,8 @@ import { viteSingleFile } from 'vite-plugin-singlefile'
 
 // `vite build --mode preview-single` packs the whole site into one HTML file.
 export default defineConfig(({ mode }) => ({
+  // Relative paths let the build run from any folder, e.g. GitHub Pages' /ekta-prithvi-wedding/.
+  base: './',
   plugins: [react(), ...(mode === 'preview-single' ? [viteSingleFile()] : [])],
   build: {
     outDir: mode === 'preview-single' ? 'dist-single' : 'dist',
