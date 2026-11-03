@@ -176,6 +176,7 @@ export default function RSVP() {
                 </p>
               )}
               <button type="submit" className="btn btn--solid" disabled={status === 'sending'}>
+                <img className="btn__seal" src={art('seal')} alt="" aria-hidden="true" />
                 {status === 'sending' ? 'SENDING YOUR REPLY' : 'CONFIRM ATTENDANCE'}
               </button>
             </motion.form>

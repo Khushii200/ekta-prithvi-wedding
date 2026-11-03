@@ -12,7 +12,7 @@ import RSVP from './components/RSVP.jsx'
 import Footer from './components/Footer.jsx'
 import MusicPlayer from './components/MusicPlayer.jsx'
 import Petals from './components/Petals.jsx'
-import Divider from './components/Divider.jsx'
+import Divider, { Bleed } from './components/Divider.jsx'
 
 // Every load starts at the envelope, so the browser must not restore the old scroll position.
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
@@ -53,14 +53,19 @@ export default function App() {
         {opened && <Petals />}
         <main>
           <Hero />
+          <Bleed tone="rose" />
           <Welcome />
           <Divider art="garland" />
           <WeddingEvents />
+          <Bleed tone="dusk" />
           <Venue />
+          <Bleed tone="sage" />
           <Countdown />
           <Divider art="sprig-b" narrow />
           <Gallery />
+          <Bleed tone="gold" />
           <RSVP />
+          <Bleed tone="rose" />
         </main>
         <Footer onReplay={replay} />
         {opened && <MusicPlayer />}

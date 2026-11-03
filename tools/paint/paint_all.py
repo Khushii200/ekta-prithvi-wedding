@@ -19,73 +19,166 @@ def ring(c, r, a0, a1, n=40, squash=1.0):
     return [(c[0] + math.cos(a) * r, c[1] + math.sin(a) * r * squash) for a in np.linspace(a0, a1, n)]
 
 
-def corner(seed, big=135):
-    p = Painting(1000, 1000, seed)
-    p.eucalyptus(bez((230, 120), (480, 70), (820, 60)), size=30, spacing=52)
-    p.eucalyptus(bez((110, 240), (60, 500), (70, 800)), size=28, spacing=52)
-    p.branch(bez((280, 210), (480, 190), (680, 250)), leaf_len=86, spacing=58)
-    p.branch(bez((210, 300), (240, 460), (190, 680)), leaf_len=82, spacing=56)
-    p.branch(bez((120, 110), (300, 20), (540, 20)), leaf_len=70, spacing=60, color="paleSage", color2="sage")
-    p.lavender(300, 300, 0.75, 300)
-    p.spray(420, 180, 0.2, 240)
-    p.spray(170, 440, 1.25, 230)
-    p.spray(330, 340, 0.85, 240, tone="rose")
-    p.rose(175, 165, big)
-    p.rose(395, 120, big * 0.62, tone="blush", deep="rose", dark="deeprose")
-    p.rose(110, 395, big * 0.66, tone="blush", deep="rose", dark="deeprose")
-    p.wildflower(345, 280, 56)
-    p.wildflower(250, 345, 40, tone="paleSage", deep="sage")
-    p.wildflower(530, 150, 38)
-    p.wildflower(120, 560, 36, tone="champagne", deep="ochre", centre="brown")
-    p.bud(610, 320, 0.4, 62)
-    p.bud(285, 610, 1.3, 56)
-    p.splatter(420, 420, 95, 22, "rose", 0.5)
-    p.splatter(600, 110, 80, 10, "sage", 0.5)
-    return p
+# Four bouquets, each tucked into the top-left corner of its sheet, so no screen
+# shows the same arrangement twice. (x, y, radius, flower, tone)
+BOUQUETS = {
+    # a full, round mass in the corner with arms along both edges
+    "a": dict(seed=111, arms=[(0.05, 640), (0.32, 520), (0.62, 470), (0.95, 520), (1.28, 640), (0.18, 360), (1.1, 380)],
+              blooms=[(560, 70, 62, "rose", "blush"), (70, 560, 66, "rose", "blush"), (470, 205, 50, "wild", None),
+                      (215, 400, 46, "wild", None), (390, 300, 58, "rose", "blush"), (300, 255, 92, "peony", "blush"),
+                      (95, 360, 112, "peony", "rose"), (375, 95, 108, "rose", "blush"), (150, 150, 150, "rose", "rose")],
+              buds=[(690, 120, 0.2), (130, 700, 1.4), (520, 330, 0.7)], berries=[(260, 120, -0.1), (120, 300, 1.7)]),
+    # a cascade that tumbles down the left edge
+    "b": dict(seed=112, arms=[(0.05, 430), (0.35, 380), (1.25, 820), (1.45, 900), (1.05, 700), (1.6, 760), (0.75, 420)],
+              blooms=[(330, 110, 66, "rose", "blush"), (110, 760, 64, "rose", "blush"), (220, 620, 58, "wild", None),
+                      (90, 610, 86, "peony", "blush"), (240, 450, 74, "rose", "blush"), (120, 440, 104, "rose", "rose"),
+                      (260, 260, 98, "peony", "blush"), (115, 215, 140, "rose", "rose")],
+              buds=[(80, 880, 1.6), (430, 70, 0.1), (330, 560, 1.0)], berries=[(200, 330, 0.9), (60, 520, 1.6), (420, 160, 0.4)]),
+    # a long, low sweep along the top edge
+    "c": dict(seed=113, arms=[(0.0, 900), (0.12, 820), (-0.05, 760), (0.3, 560), (1.3, 420), (0.85, 380), (1.0, 300)],
+              blooms=[(740, 70, 54, "rose", "blush"), (90, 340, 66, "rose", "blush"), (610, 120, 50, "wild", None),
+                      (520, 70, 84, "peony", "blush"), (390, 170, 70, "rose", "blush"), (300, 75, 116, "rose", "rose"),
+                      (150, 210, 104, "peony", "rose"), (95, 85, 120, "rose", "blush")],
+              buds=[(860, 90, 0.05), (110, 480, 1.5), (450, 250, 0.9)], berries=[(650, 40, 0.15), (230, 300, 1.0)]),
+    # an offset crescent, opening towards the page
+    "d": dict(seed=114, arms=[(0.1, 700), (0.4, 600), (0.75, 520), (1.1, 600), (1.4, 720), (0.55, 340)],
+              blooms=[(610, 110, 60, "wild", None), (110, 610, 58, "wild", None), (500, 160, 70, "rose", "blush"),
+                      (150, 500, 72, "rose", "blush"), (420, 300, 54, "rose", "blush"), (360, 110, 100, "peony", "blush"),
+                      (110, 350, 96, "peony", "rose"), (255, 220, 128, "rose", "rose"), (70, 90, 84, "rose", "blush")],
+              buds=[(720, 140, 0.25), (140, 720, 1.35), (560, 290, 0.75)], berries=[(330, 360, 0.8), (420, 40, 0.0), (40, 420, 1.55)]),
+}
+
+
+def bouquet(style):
+    b = BOUQUETS[style]
+    p = Painting(1000, 1000, b["seed"])
+    rng = p.r
+    blooms = b["blooms"]
+    big = [q for q in blooms if q[2] >= 80]
+    # greenery is painted first, around the flowers, so the flowers sit in front of it
+    p.stencil([(x, y, r * (0.92 if k != "wild" else 0.8)) for x, y, r, k, _ in blooms])
+    for x, y, r, *_ in big:
+        p.blob(x, y, r * 1.6, r * 1.4, 0, "paleSage", 0.18, color2="blush", bleed=6, wet=8, edge=0.1)
+    for i, (a, L) in enumerate(b["arms"]):
+        a += rng.uniform(-0.06, 0.06)
+        ox, oy = big[i % len(big)][:2]
+        x0, y0 = ox + rng.uniform(-20, 20), oy + rng.uniform(-20, 20)
+        ex, ey = 60 + math.cos(a) * L, 60 + math.sin(a) * L
+        dx, dy = ex - x0, ey - y0
+        bend = rng.uniform(-0.16, 0.16)
+        mid = ((x0 + ex) / 2 - dy * bend, (y0 + ey) / 2 + dx * bend)
+        kind = i % 3
+        if kind == 0:
+            p.branch(bez((x0, y0), mid, (ex, ey)), leaf_len=rng.uniform(80, 98), spacing=rng.uniform(34, 42))
+        elif kind == 1:
+            p.eucalyptus(bez((x0, y0), mid, (ex, ey)), size=rng.uniform(26, 33), spacing=rng.uniform(36, 42))
+        else:
+            p.branch(bez((x0, y0), mid, (ex, ey)), leaf_len=rng.uniform(68, 82), spacing=rng.uniform(32, 40),
+                     color="paleSage", color2="sage")
+    # short leafy stems peeking out between neighbouring blooms
+    for x, y, r, *_ in blooms:
+        for _ in range(2):
+            a = math.atan2(y - 60, x - 60) + rng.uniform(-1.3, 1.3)
+            L = r * rng.uniform(1.5, 2.1)
+            p.branch(bez((x, y), (x + math.cos(a) * L * 0.55 + rng.uniform(-15, 15), y + math.sin(a) * L * 0.55), (x + math.cos(a) * L, y + math.sin(a) * L)),
+                     leaf_len=rng.uniform(50, 66), spacing=rng.uniform(26, 32), stem_w=1.8,
+                     color=rng.choice(["sage", "paleSage", "sage"]), color2="deepSage", terminal=rng.random() < 0.6)
+    for x, y, r, *_ in big[:3]:
+        a = math.atan2(y - 60, x - 60) + rng.uniform(-0.6, 0.6)
+        p.spray(x, y, a, r + rng.uniform(150, 210), tone=rng.choice(["champagne", "rose"]))
+    ox, oy = big[-1][:2]
+    p.lavender(ox, oy, math.atan2(oy - 40, ox - 40) + rng.uniform(-0.4, 0.4), rng.uniform(320, 400))
+    for x, y, a in b["berries"]:
+        p.berries(x, y, a, rng.uniform(90, 130))
+    for x, y, a in b["buds"]:
+        p.bud(x, y, a, rng.uniform(52, 66))
+    p.mask = None
+    # blooms, smallest first, on clean paper
+    for i, (x, y, r, kind, tone) in enumerate(blooms):
+        if kind == "rose":
+            if tone == "blush" and i % 3 == 1:
+                tone, deep, dark = "champagne", "ochre", "brown"
+            else:
+                deep, dark = ("deeprose", "burgundy") if tone == "rose" else ("rose", "deeprose")
+            p.rose(x, y, r, tone=tone, deep=deep, dark=dark, reserve=0)
+        elif kind == "peony":
+            p.peony(x, y, r, tone=tone, deep="deeprose" if tone == "rose" else "rose", dark="burgundy" if tone == "rose" else "deeprose")
+        else:
+            p.wildflower(x, y, r, *(("champagne", "ochre", "brown") if rng.random() < 0.4 else ("blush", "rose", "ochre")))
+    for x, y, r, *_ in big[-3:]:
+        a = rng.random() * math.tau
+        p.wildflower(x + math.cos(a) * r * 1.0, y + math.sin(a) * r * 1.0, rng.uniform(22, 30),
+                     *(("paleSage", "sage", "ochre") if rng.random() < 0.3 else ("blush", "rose", "ochre")))
+    p.splatter(380, 380, 140, 24, "rose", 0.5)
+    p.splatter(560, 160, 90, 10, "sage", 0.5)
+    p.save(out(f"corner-{style}"), (800, 800), 80)
 
 
 def arch():
     W, H = 1000, 1300
     p = Painting(W, H, 21)
+    rng = p.r
     c, R = (500, 500), 280
     # fine double line, drawn by a steady hand
     for rr, dens in ((R + 12, 0.85), (R + 26, 0.45)):
         path = [(c[0] - rr, 1140)] + ring(c, rr, math.pi, math.tau, 70) + [(c[0] + rr, 1140)]
         p.pen(path, "burgundy", 1.8, dens, wobble=0.5)
-    # a pale halo behind the arch that bleeds out into the paper
-    for x, y, r in ((270, 340, 95), (730, 990, 95), (280, 1080, 80)):
-        p.blob(x, y, r, color="blush", density=0.3, color2="champagne", bleed=7, wet=8, edge=0.1)
-    # climbing vines
-    p.branch(bez((205, 1130), (150, 800), (205, 480)), leaf_len=78, spacing=62)
-    p.eucalyptus(bez((795, 1040), (880, 760), (800, 460)), size=25, spacing=54)
-    p.branch(bez((230, 320), (340, 130), (560, 90)), leaf_len=78, spacing=58)
-    p.eucalyptus(bez((260, 260), (150, 200), (60, 250)), size=28, spacing=46)
-    p.branch(bez((820, 1130), (920, 1120), (960, 1000)), leaf_len=74, spacing=50, color="paleSage", color2="sage")
-    p.branch(bez((170, 1160), (70, 1120), (40, 980)), leaf_len=74, spacing=50, color="paleSage", color2="sage")
-    p.branch(bez((560, 1200), (700, 1240), (880, 1210)), leaf_len=70, spacing=52)
-    p.lavender(120, 1190, -1.0, 280)
-    p.spray(790, 1130, -0.6, 210)
-    p.spray(110, 270, -2.5, 120)
-    # flowers: top-left cluster
-    p.rose(232, 262, 118)
-    p.rose(390, 145, 72, tone="blush", deep="rose", dark="deeprose")
-    p.rose(115, 385, 66, tone="blush", deep="rose", dark="deeprose")
-    p.wildflower(320, 245, 42)
-    p.wildflower(500, 118, 32)
-    p.wildflower(130, 240, 34, tone="champagne", deep="ochre", centre="brown")
-    p.bud(610, 76, 0.1, 50)
-    # foot: bottom-right cluster
-    p.rose(775, 1095, 128)
-    p.rose(610, 1170, 78, tone="blush", deep="rose", dark="deeprose")
-    p.rose(905, 960, 70, tone="blush", deep="rose", dark="deeprose")
-    p.wildflower(860, 1180, 46)
-    p.wildflower(690, 1050, 34, tone="paleSage", deep="sage")
-    # foot: left
-    p.rose(205, 1160, 92, tone="blush", deep="rose", dark="deeprose")
-    p.wildflower(310, 1205, 36)
-    p.wildflower(100, 1065, 30, tone="champagne", deep="ochre", centre="brown")
-    p.splatter(120, 700, 50, 10, "rose")
-    p.splatter(900, 640, 60, 12, "sage")
+    # (x, y, r, kind, tone): crown at top left, a heavy foot at bottom right, a lighter foot at left,
+    # and a small bloom on each flank where the trailing sprays start
+    blooms = [(520, 108, 46, "wild", None), (150, 250, 42, "wild", None), (345, 255, 60, "rose", "champagne"),
+              (112, 392, 82, "rose", "blush"), (392, 142, 90, "peony", "blush"), (232, 262, 132, "rose", "rose"),
+              (92, 640, 52, "rose", "blush"), (910, 610, 50, "peony", "blush"),
+              (870, 1185, 50, "wild", None), (700, 1012, 56, "rose", "champagne"), (905, 955, 80, "rose", "blush"),
+              (612, 1178, 90, "peony", "blush"), (775, 1095, 140, "rose", "rose"),
+              (95, 1062, 44, "wild", None), (322, 1212, 54, "rose", "champagne"), (205, 1160, 100, "peony", "blush")]
+    p.stencil([(x, y, r * (0.92 if k != "wild" else 0.8)) for x, y, r, k, _ in blooms])
+    for x, y, r in ((270, 330, 150), (760, 1060, 160), (220, 1130, 110)):
+        p.blob(x, y, r, color="paleSage", density=0.2, color2="blush", bleed=7, wet=8, edge=0.1)
+    # climbing vines up both sides of the arch
+    p.branch(bez((205, 1130), (150, 800), (205, 480)), leaf_len=80, spacing=40)
+    p.eucalyptus(bez((795, 1040), (880, 760), (800, 460)), size=26, spacing=40)
+    p.branch(bez((232, 262), (340, 130), (580, 80)), leaf_len=80, spacing=40)
+    p.eucalyptus(bez((232, 262), (150, 190), (40, 250)), size=28, spacing=40)
+    p.branch(bez((232, 262), (120, 300), (60, 470)), leaf_len=70, spacing=36, color="paleSage", color2="sage")
+    p.branch(bez((392, 142), (500, 60), (690, 50)), leaf_len=64, spacing=34, color="paleSage", color2="sage")
+    p.branch(bez((775, 1095), (920, 1120), (980, 980)), leaf_len=76, spacing=38, color="paleSage", color2="sage")
+    p.branch(bez((205, 1160), (70, 1120), (20, 960)), leaf_len=74, spacing=38, color="paleSage", color2="sage")
+    p.branch(bez((612, 1178), (720, 1250), (900, 1230)), leaf_len=70, spacing=36)
+    p.branch(bez((775, 1095), (840, 900), (960, 820)), leaf_len=66, spacing=36)
+    # trailing sprays off each flank: the names rest among these
+    for sx, dirn, y0 in ((92, -1, 640), (910, 1, 610)):
+        p.branch(bez((sx, y0), (sx + dirn * 60, y0 - 40), (sx + dirn * 140, y0 - 10)), leaf_len=58, spacing=30, stem_w=1.8)
+        p.eucalyptus(bez((sx, y0), (sx + dirn * 50, y0 + 50), (sx + dirn * 120, y0 + 70)), size=20, spacing=30)
+        p.branch(bez((sx, y0), (sx - dirn * 10, y0 + 100), (sx + dirn * 20, y0 + 200)), leaf_len=56, spacing=30, stem_w=1.6,
+                 color="paleSage", color2="sage")
+        p.spray(sx, y0, -1.57 + dirn * 0.9, 150, tone="rose")
+        p.berries(sx, y0, dirn * 0.2 + (math.pi if dirn < 0 else 0), 110)
+    for x, y, r, *_ in blooms:
+        for _ in range(2 if r > 80 else 1):
+            a = math.atan2(y - 650, x - 500) + rng.uniform(-1.2, 1.2)
+            L = r * rng.uniform(1.4, 1.9)
+            p.branch(bez((x, y), (x + math.cos(a) * L * 0.55, y + math.sin(a) * L * 0.55), (x + math.cos(a) * L, y + math.sin(a) * L)),
+                     leaf_len=rng.uniform(46, 60), spacing=28, stem_w=1.6, color=rng.choice(["sage", "paleSage"]), color2="deepSage")
+    p.lavender(120, 1190, -1.0, 290)
+    p.lavender(232, 262, -2.2, 260)
+    p.spray(790, 1130, -0.6, 220)
+    p.spray(110, 270, -2.5, 140)
+    p.berries(392, 142, -1.2, 120)
+    p.berries(775, 1095, 0.3, 130)
+    p.bud(640, 70, 0.1, 54)
+    p.bud(960, 900, -1.3, 50)
+    p.mask = None
+    for i, (x, y, r, kind, tone) in enumerate(blooms):
+        if kind == "rose":
+            deep, dark = {"rose": ("deeprose", "burgundy"), "blush": ("rose", "deeprose"), "champagne": ("ochre", "brown")}[tone]
+            p.rose(x, y, r, tone=tone, deep=deep, dark=dark, reserve=0)
+        elif kind == "peony":
+            p.peony(x, y, r, tone=tone, deep="rose", dark="deeprose")
+        else:
+            p.wildflower(x, y, r, *(("champagne", "ochre", "brown") if i % 2 else ("blush", "rose", "ochre")))
+    p.splatter(120, 760, 50, 10, "rose")
+    p.splatter(900, 720, 60, 12, "sage")
+    p.fade_edges(70)
     p.save(out("arch"), quality=80)
 
 
@@ -163,41 +256,57 @@ def vine():
 
 
 # ------------------------------------------------------------ envelope
+def env_cluster(p, blooms, greens):
+    """Paint greenery around a set of blooms, then the blooms on clean paper."""
+    p.stencil([(x, y, r * (0.92 if k != "wild" else 0.8)) for x, y, r, k, _ in blooms])
+    for g in greens:
+        g()
+    p.mask = None
+    for x, y, r, kind, tone in blooms:
+        if kind == "rose":
+            deep, dark = {"rose": ("deeprose", "burgundy"), "blush": ("rose", "deeprose"), "champagne": ("ochre", "brown")}[tone]
+            p.rose(x, y, r, tone=tone, deep=deep, dark=dark, reserve=0)
+        elif kind == "peony":
+            p.peony(x, y, r, tone=tone, deep="rose", dark="deeprose")
+        else:
+            p.wildflower(x, y, r, *(("champagne", "ochre", "brown") if tone == "champagne" else ("blush", "rose", "ochre")))
+
+
 def env_flap():
     # art sits inside the flap's triangle: top corners and along the diagonals
     p = Painting(1200, 500, 61)
-    p.branch(bez((36, 10), (170, 60), (360, 170)), leaf_len=56, spacing=44, stem_w=2)
-    p.branch(bez((1164, 10), (1030, 60), (840, 170)), leaf_len=56, spacing=44, stem_w=2)
-    p.eucalyptus(bez((260, 6), (400, 30), (520, 90)), size=15, spacing=30)
-    p.eucalyptus(bez((940, 6), (800, 30), (680, 90)), size=15, spacing=30)
-    p.rose(120, 44, 66)
-    p.rose(1080, 44, 66)
-    p.wildflower(225, 72, 26)
-    p.wildflower(975, 72, 26)
-    p.wildflower(300, 26, 20, tone="paleSage", deep="sage")
-    p.wildflower(900, 26, 20, tone="paleSage", deep="sage")
+    blooms = []
+    greens = []
+    for s, x0 in ((1, 0), (-1, 1200)):
+        X = lambda u, x0=x0, s=s: x0 + s * u
+        blooms += [(X(300), 30, 22, "wild", "blush"), (X(230), 80, 30, "wild", "champagne"), (X(195), 30, 44, "rose", "champagne"),
+                   (X(60), 110, 46, "peony", "blush"), (X(120), 46, 74, "rose", "rose")]
+        greens += [lambda X=X, s=s: p.branch(bez((X(120), 46), (X(240), 90), (X(380), 180)), leaf_len=58, spacing=30, stem_w=2),
+                   lambda X=X, s=s: p.eucalyptus(bez((X(195), 30), (X(330), 20), (X(500), 70)), size=17, spacing=28),
+                   lambda X=X, s=s: p.branch(bez((X(60), 110), (X(80), 170), (X(150), 210)), leaf_len=50, spacing=28, stem_w=1.6, color="paleSage", color2="sage"),
+                   lambda X=X, s=s: p.berries(X(120), 46, 0.5 if s > 0 else math.pi - 0.5, 120),
+                   lambda X=X, s=s: p.spray(X(150), 60, 0.35 if s > 0 else math.pi - 0.35, 170)]
+    env_cluster(p, blooms, greens)
     p.save(out("env-flap"), (900, 375), 80)
 
 
 def env_pocket():
     p = Painting(1200, 800, 62)
-    # bottom corners, climbing the side edges
-    p.branch(bez((60, 760), (40, 600), (60, 400)), leaf_len=60, spacing=44, stem_w=2)
-    p.branch(bez((1140, 760), (1160, 600), (1140, 400)), leaf_len=60, spacing=44, stem_w=2)
-    p.branch(bez((110, 740), (280, 790), (480, 770)), leaf_len=58, spacing=44, stem_w=2)
-    p.branch(bez((1090, 740), (920, 790), (720, 770)), leaf_len=58, spacing=44, stem_w=2)
-    p.eucalyptus(bez((120, 690), (240, 660), (330, 590)), size=16, spacing=30)
-    p.eucalyptus(bez((1080, 690), (960, 660), (870, 590)), size=16, spacing=30)
-    p.spray(170, 660, -1.1, 120)
-    p.spray(1030, 660, -2.0, 120)
-    p.rose(105, 715, 84)
-    p.rose(1095, 715, 84)
-    p.rose(235, 740, 46, tone="blush", deep="rose", dark="deeprose")
-    p.rose(965, 740, 46, tone="blush", deep="rose", dark="deeprose")
-    p.wildflower(70, 590, 28)
-    p.wildflower(1130, 590, 28)
-    p.wildflower(330, 770, 22, tone="paleSage", deep="sage")
-    p.wildflower(870, 770, 22, tone="paleSage", deep="sage")
+    blooms = []
+    greens = []
+    for s, x0 in ((1, 0), (-1, 1200)):
+        X = lambda u, x0=x0, s=s: x0 + s * u
+        blooms += [(X(70), 560, 30, "wild", "blush"), (X(330), 770, 26, "wild", "champagne"), (X(250), 760, 48, "rose", "champagne"),
+                   (X(60), 640, 58, "peony", "blush"), (X(190), 690, 54, "peony", "blush"), (X(105), 735, 92, "rose", "rose")]
+        greens += [lambda X=X, s=s: p.branch(bez((X(105), 735), (X(40), 560), (X(60), 380)), leaf_len=62, spacing=32, stem_w=2),
+                   lambda X=X, s=s: p.branch(bez((X(105), 735), (X(280), 790), (X(500), 770)), leaf_len=60, spacing=32, stem_w=2),
+                   lambda X=X, s=s: p.eucalyptus(bez((X(190), 690), (X(280), 640), (X(380), 600)), size=18, spacing=28),
+                   lambda X=X, s=s: p.branch(bez((X(60), 640), (X(130), 520), (X(110), 450)), leaf_len=50, spacing=28, stem_w=1.6, color="paleSage", color2="sage"),
+                   lambda X=X, s=s: p.spray(X(190), 690, -1.1 if s > 0 else -2.0, 150),
+                   lambda X=X, s=s: p.berries(X(250), 760, -0.9 if s > 0 else math.pi + 0.9, 110),
+                   lambda X=X, s=s: p.lavender(X(105), 735, -0.75 if s > 0 else math.pi + 0.75, 220)]
+    env_cluster(p, blooms, greens)
+    p.fade_edges(24)
     p.save(out("env-pocket"), (900, 600), 80)
 
 
@@ -240,7 +349,7 @@ def wax_seal():
     lx, ly, lz = -0.48, -0.62, 0.62
     dif = np.clip(nx * lx + ny * ly + nz * lz, 0, 1)
     spec = np.clip(nx * lx * 0.6 + ny * ly * 0.6 + nz * 0.8, 0, 1) ** 26
-    base = hex2("#D9A6A2")[None, None] * 0.9
+    base = hex2("#C48589")[None, None] * 0.92
     shade = (0.56 + 0.62 * dif)[..., None]
     rgb = base * shade + spec[..., None] * 0.28
     rgb = rgb * (1 + (gf(r.random((S, S), dtype=np.float32), 14)[..., None] - 0.5) * 0.7)
@@ -470,32 +579,79 @@ def reception():
     p.save(os.path.join(EV, "reception.webp"), (680, 680), 80)
 
 
+def mango_leaf(p, x, y, a, L, curl=0.25):
+    """Long, glossy mango leaf with a drooping, curved spine."""
+    ts = np.linspace(0, 1, 9)
+    ca, sa = math.cos(a), math.sin(a)
+    sp = np.array([(x + ca * t * L - sa * curl * L * t * t, y + sa * t * L + ca * curl * L * t * t) for t in ts])
+    w = np.sin(ts * math.pi) ** 0.7 * L * 0.15
+    tan = np.gradient(sp, axis=0)
+    tan /= np.hypot(tan[:, 0], tan[:, 1])[:, None]
+    nor = np.stack([-tan[:, 1], tan[:, 0]], 1)
+    for side, dk in ((1, 1.0), (-1, 0.75)):
+        out_ = sp + nor * (w[:, None] + 0.8) * side
+        inn = sp + nor * 0.8 * side
+        p.wash(np.concatenate([inn, out_[::-1][1:-1]]), "sage", 0.72 * dk, "deepSage", var=0.08, depth=3, layers=6, wet=0.7,
+               edge=1.1, fade=(x, y, L, 1.2, 0.75))
+    p.pen(sp, "olive", max(1.0, L * 0.011), 0.6, wobble=0.1)
+
+
 def vrat():
     p = Painting(800, 800, 75)
-    ground(p, "champagne", "blush", 0.22, 400, 430, 250)
-    # kalash: an old, simple form, painted in one breath
-    prof = [(0, 0), (34, 6), (42, 26), (32, 48), (68, 84), (112, 150), (120, 208), (92, 272), (54, 312), (66, 328), (0, 332)]
-    x0, y0 = 400, 268
-    L = [(x0 - a, y0 + b) for a, b in prof]
-    R = [(x0 + a, y0 + b) for a, b in prof]
-    poly = np.array(R + L[::-1][1:-1])
-    p.wash(poly, "champagne", 0.62, color2="blush", wet=1.6, layers=8, var=0.018, depth=2, edge=1.3, fade=(355, 390, 170, .55, 1.25))
-    p.pen(L, "burgundy", 1.7, 0.75, wobble=0.2)
-    p.pen(R, "burgundy", 1.7, 0.75, wobble=0.2)
-    p.pen(bez((x0 - 111, 416), (x0, 462), (x0 + 111, 416)), "burgundy", 1.3, 0.55)
-    p.pen(bez((x0 - 117, 446), (x0, 494), (x0 + 117, 446)), "burgundy", 1.3, 0.55)
-    p.wildflower(x0, 400, 28, tone="blush", deep="rose")
-    # mango leaves fanned at the mouth
-    for a in (-2.55, -2.2, -1.85, -1.29, -0.94, -0.59):
-        p.leaf(x0 + math.cos(a) * 18, y0 + 10, a, 138, 44, density=0.75)
-    p.leaf(x0, y0 + 6, -1.57, 120, 40, color="paleSage", color2="sage", density=0.8)
-    p.blob(x0, 250, 36, 32, 0, "ochre", 0.5, color2="champagne", wet=1.2, layers=7, var=0.1)
-    # a single low sprig and a few fallen petals
-    p.pen(bez((180, 612), (400, 640), (620, 612)), "burgundy", 1.2, 0.35)
-    p.branch(bez((220, 622), (260, 610), (310, 620)), leaf_len=36, spacing=26, stem_w=1.3)
-    p.wildflower(216, 618, 20)
-    for x, y in ((540, 610), (572, 626), (606, 606)):
-        p.petal(x, y, p.r.random() * 6.28, 18, 12, "rose", 0.6, layers=3, wet=0.4, depth=2)
+    ground(p, "champagne", "blush", 0.26, 400, 440, 270)
+    x0 = 400
+    # brass kalash: a full round belly, a pinched neck and a flared lip
+    belly_c, br = (x0, 470), 132
+    prof = [(0, 0), (40, 4), (52, 20), (38, 40), (34, 58)]
+    neck = [(x0 + a, 268 + b) for a, b in prof]
+    bowl = [(x0 + math.cos(t) * br * 1.02, belly_c[1] + math.sin(t) * br * 0.95) for t in np.linspace(-1.2, 1.35, 22)]
+    base = [(x0 + 70, 598), (x0 + 82, 618), (x0 - 82, 618), (x0 - 70, 598)]
+    left = [(2 * x0 - u, v) for u, v in bowl[::-1]]
+    left_neck = [(2 * x0 - u, v) for u, v in neck[::-1]]
+    poly = np.array(neck + bowl + base + left + left_neck)
+    p.wash(poly, "ochre", 0.62, color2="champagne", wet=1.6, layers=9, var=0.015, depth=2, edge=1.5,
+           fade=(x0 + 60, 520, 230, 1.35, 0.55))
+    # the shine and the shadow side
+    p.lift(x0 - 56, 440, 34, 70, 0.5, 60)
+    p.blob(x0 + 74, 500, 52, 104, 0.2, "brown", 0.2, wet=10, bleed=4, var=0.2, edge=0.05)
+    p.pen(np.array(neck + bowl), "brown", 1.5, 0.55, wobble=0.25)
+    p.pen(np.array(left + left_neck), "brown", 1.5, 0.55, wobble=0.25)
+    p.pen(base + [base[0]], "brown", 1.3, 0.5)
+    # a red thread wound at the neck, with a short tassel
+    for k in range(4):
+        y = 316 + k * 5
+        p.stroke(bez((x0 - 36, y), (x0, y + 7), (x0 + 36, y), n=12), 3.2, "burgundy", 0.75, "deeprose", taper=(0.8, 0.8), wobble=0.2)
+    p.stroke(bez((x0 + 30, 330), (x0 + 42, 360), (x0 + 34, 392), n=10), 3, "burgundy", 0.7, taper=(0.8, 0.3))
+    # a band of marigolds draped across the belly, and a painted motif under it
+    sw = resample(bez((x0 - 126, 418), (x0, 476), (x0 + 126, 418), n=30), 13)
+    for i, (x, y) in enumerate(sw):
+        marigold(p, x, y, 11.5, *(("blush", "rose") if i % 4 == 2 else ("champagne", "ochre")))
+    p.wildflower(x0 - 8, 520, 30, tone="rose", deep="deeprose", centre="ochre")
+    for a in (0, 1.57, 3.14, 4.71):
+        p.blob(x0 - 8 + math.cos(a) * 46, 520 + math.sin(a) * 46, 4, color="burgundy", density=0.8, sides=6, layers=2, depth=1, wet=0.3)
+    # coconut sitting in a crown of mango leaves; the leaves are painted around it
+    p.stencil([(x0, 214, 50)], soft=2)
+    for a, L, cu in ((-2.75, 150, 0.32), (-2.35, 160, 0.22), (-1.95, 150, 0.12), (-1.2, 150, -0.12), (-0.8, 160, -0.22),
+                     (-0.4, 150, -0.32), (-1.57, 130, 0.04), (-2.6, 120, -0.1), (-0.55, 120, 0.1)):
+        mango_leaf(p, x0 + math.cos(a) * 30, 262, a, L, cu)
+    p.mask = None
+    p.blob(x0, 214, 50, 56, 0.1, "brown", 0.7, color2="ochre", wet=1.4, layers=8, var=0.08, edge=1.4, fade=(x0 - 20, 190, 80, 0.6, 1.3))
+    for k in range(9):
+        u = -38 + k * 9.5
+        p.pen(bez((x0 + u * 0.25, 162), (x0 + u * 1.15, 205), (x0 + u * 0.8, 262), n=10), "brown", 0.9, 0.35, wobble=0.35)
+    p.stroke(bez((x0 - 20, 150), (x0, 132), (x0 + 22, 150), n=10), 3.2, "burgundy", 0.7, taper=(0.6, 0.6))
+    # a small lit diya beside it, petals scattered on the ground
+    dx, dy = 600, 610
+    p.wash(np.array([(dx - 44, dy - 10), (dx + 44, dy - 10), (dx + 30, dy + 14), (dx - 30, dy + 14)]), "ochre", 0.7, color2="brown",
+           wet=0.8, layers=5, var=0.03, depth=1, edge=1.4)
+    p.blob(dx, dy - 60, 50, color="champagne", density=0.45, bleed=5, wet=9, edge=0.0)
+    p.wash(np.array([(dx, dy - 52), (dx + 9, dy - 32), (dx + 6, dy - 18), (dx, dy - 13), (dx - 6, dy - 18), (dx - 9, dy - 32)]),
+           "ochre", 0.95, color2="champagne", wet=0.7, layers=4, var=0.06, depth=2, edge=1.1, fade=(dx, dy - 18, 34, 1.6, .5))
+    p.pen(bez((150, 630), (400, 660), (650, 630)), "brown", 1.1, 0.3)
+    p.branch(bez((180, 640), (230, 600), (290, 630)), leaf_len=40, spacing=26, stem_w=1.3)
+    p.rose(196, 628, 40, tone="blush", deep="rose", dark="deeprose", reserve=0.5)
+    for x, y in ((300, 650), (480, 660), (520, 646), (690, 648), (240, 668)):
+        p.petal(x, y, p.r.random() * 6.28, 18, 12, "rose" if x % 3 else "ochre", 0.6, layers=3, wet=0.4, depth=2)
     p.save(os.path.join(EV, "vrat.webp"), (680, 680), 80)
 
 
@@ -546,38 +702,64 @@ def cocktail():
 
 
 # ------------------------------------------------------------ map
+def tree(p, x, y, s, tone="sage"):
+    p.pen([(x, y), (x + 1, y + s * 0.9)], "brown", 1.4, 0.55, wobble=0.2)
+    p.blob(x, y, s * 0.62, s * 0.7, 0, tone, 0.62, color2="deepSage", wet=0.9, var=0.3, layers=6, edge=1.4,
+           fade=(x - s * 0.3, y - s * 0.3, s * 1.2, 0.7, 1.3))
+
+
+def house(p, x, y, s, roof="deeprose"):
+    p.wash(np.array([(x - s, y), (x + s, y), (x + s, y + s * 1.1), (x - s, y + s * 1.1)]), "champagne", 0.55, color2="blush",
+           wet=0.6, layers=4, var=0.03, depth=1, edge=1.2)
+    p.wash(np.array([(x - s * 1.25, y + 2), (x, y - s * 0.9), (x + s * 1.25, y + 2)]), roof, 0.6, color2="burgundy",
+           wet=0.6, layers=4, var=0.04, depth=1, edge=1.4)
+    p.blob(x, y + s * 0.62, s * 0.22, s * 0.32, 0, "brown", 0.5, sides=6, layers=2, depth=1, wet=0.3)
+
+
 def venue_map():
     p = Painting(1000, 760, 81)
-    # the sea, a wash that fades out before it reaches the sheet's edge
-    p.wash(np.array([(-40, -40), (150, -40), (240, 160), (190, 330), (260, 520), (210, 800), (-40, 800)]),
-           "paleSage", 0.55, color2="sage", wet=7, bleed=5, layers=9, var=0.08, edge=0.8)
-    for i in range(5):
-        x = 70 + i * 22
-        p.pen([(x + math.sin(y / 52 + i) * 9, y) for y in range(180 + i * 50, 300 + i * 50, 12)], "deepSage", 1.1, 0.4)
-    for x, y, r in ((560, 170, 80), (790, 560, 92), (360, 610, 66)):
-        p.blob(x, y, r, r * .8, 0.3, "sage", 0.28, color2="paleSage", bleed=4, wet=4, edge=0.5)
+    rng = p.r
+    # the sea, laid wet so it blooms into the land
+    p.wash(np.array([(-40, -40), (170, -40), (250, 170), (200, 340), (270, 520), (220, 800), (-40, 800)]),
+           "paleSage", 0.62, color2="sage", wet=9, bleed=7, layers=9, var=0.1, edge=0.6)
+    for i in range(7):
+        y = 140 + i * 82 + rng.uniform(-14, 14)
+        x = 40 + rng.uniform(0, 90)
+        p.stroke(bez((x, y), (x + 30, y - 7), (x + 66, y), n=10), 2.4, "deepSage", 0.4, "sage", taper=(0.2, 0.2), wobble=0.4)
+    # land: loose, overlapping washes rather than outlines
+    for x, y, rx, ry, t1, t2 in ((560, 200, 260, 170, "champagne", "paleSage"), (780, 540, 230, 170, "paleSage", "champagne"),
+                                  (420, 600, 200, 140, "blush", "champagne"), (840, 170, 170, 130, "paleSage", "sage")):
+        p.blob(x, y, rx, ry, rng.uniform(-0.3, 0.3), t1, 0.26, color2=t2, bleed=9, wet=10, edge=0.25, var=0.3)
+    # roads brushed in one stroke each, the way a hand-drawn map does it
     roads = [bez((230, 80), (480, 220), (590, 390), (960, 450)), bez((280, 700), (420, 480), (530, 390), (760, 30)),
              bez((250, 340), (420, 330), (560, 400), (740, 730)), bez((640, 30), (660, 260), (820, 300), (980, 240))]
     for r_ in roads:
-        p.stroke(r_, 8, "champagne", 0.75, None, taper=(1, 1), wobble=0.3, wet=0.8, edge=1.0)
-        p.pen(r_ + np.array([0, 5.5]), "brown", 0.9, 0.35, wobble=0.2)
-        p.pen(r_ - np.array([0, 5.5]), "brown", 0.9, 0.35, wobble=0.2)
-    for m in (bez((400, 240), (470, 150), (540, 90)), bez((710, 440), (760, 520), (860, 520)), bez((440, 370), (420, 300), (340, 240)), bez((500, 560), (600, 560), (650, 660)), bez((820, 300), (850, 200), (930, 140))):
-        p.pen(m, "brown", 1.0, 0.32, wobble=0.3)
-    # dotted route to the flower that marks the place
-    route = resample(bez((300, 690), (390, 520), (470, 460), (570, 396)), 19)
+        p.stroke(r_, 13, "champagne", 0.62, "ochre", taper=(0.7, 0.7), wobble=0.9, wet=1.2, edge=1.3)
+    # little groves and rooftops dotted across the town
+    for x, y, s in ((380, 150, 22), (420, 175, 17), (700, 110, 20), (735, 135, 16), (880, 600, 24), (910, 630, 18),
+                    (350, 520, 18), (650, 640, 22), (890, 330, 18), (470, 300, 14), (300, 420, 16)):
+        tree(p, x, y, s * 1.7, rng.choice(["sage", "paleSage", "sage"]))
+    for x, y, s, roof in ((520, 255, 15, "deeprose"), (545, 268, 11, "ochre"), (690, 470, 14, "rose"), (715, 488, 11, "deeprose"),
+                          (430, 420, 13, "ochre"), (800, 380, 12, "rose"), (620, 140, 12, "deeprose")):
+        house(p, x, y, s * 1.6, roof)
+    # the route, dotted in burgundy, to the wreath that marks The Club
+    route = resample(bez((300, 690), (390, 520), (470, 470), (520, 440)), 15)
     for x, y in route[:-2]:
-        p.blob(x, y, 3.3, color="burgundy", density=0.85, sides=6, layers=2, depth=1, wet=0.3)
-    p.branch(bez((585, 400), (660, 360), (720, 390)), leaf_len=46, spacing=32, stem_w=1.5)
-    p.branch(bez((585, 400), (500, 345), (450, 330)), leaf_len=46, spacing=32, stem_w=1.5)
-    p.rose(585, 392, 62)
-    # compass
-    cx, cy, R = 730, 590, 50
-    p.pen(ring((cx, cy), R, 0, math.tau, 50), "burgundy", 1.3, 0.6)
-    p.pen(ring((cx, cy), R - 7, 0, math.tau, 50), "burgundy", 1.0, 0.4)
-    for a, l, tone in ((-1.57, 60, "burgundy"), (0, 42, "rose"), (1.57, 42, "rose"), (3.14, 42, "rose")):
-        ca, sa = math.cos(a), math.sin(a)
-        p.wash(np.array([(cx + ca * l, cy + sa * l), (cx - sa * 9, cy + ca * 9), (cx + sa * 9, cy - ca * 9)]), tone, 0.8, wet=0.4, layers=3, var=0.01, depth=1, edge=0.8)
+        p.blob(x, y, 3.6, color="burgundy", density=0.8, sides=6, layers=2, depth=1, wet=0.4)
+    cx, cy = 590, 392
+    p.stencil([(cx, cy, 52)], soft=2)
+    p.branch(ring((cx, cy), 84, math.pi * 0.9, math.pi * 2.0, 22), leaf_len=50, spacing=26, stem_w=1.6)
+    p.branch(ring((cx, cy), 84, -0.1, math.pi * 0.95, 22), leaf_len=50, spacing=26, stem_w=1.6, color="paleSage", color2="sage")
+    p.mask = None
+    house(p, cx, cy - 8, 30, "burgundy")
+    for a, r, tone in ((-0.6, 40, "rose"), (2.4, 34, "blush"), (1.2, 26, "blush")):
+        p.rose(cx + math.cos(a) * 84, cy + math.sin(a) * 84, r, tone=tone, deep="deeprose" if tone == "rose" else "rose", reserve=0.5)
+    # a painted compass flower in the corner
+    kx, ky = 870, 690
+    for a, l, tone in ((-1.57, 46, "burgundy"), (0, 30, "rose"), (1.57, 30, "rose"), (3.14, 30, "rose")):
+        p.petal(kx, ky, a, l, 18, tone, 0.75, color2="deeprose", wet=0.6, layers=5, tip=0.7)
+    p.blob(kx, ky, 5, color="ochre", density=0.9, sides=7, layers=3, depth=1, wet=0.4)
+    p.splatter(600, 380, 200, 16, "rose", 0.45)
     p.save(out("map"), (800, 608), 80)
 
 
@@ -618,12 +800,70 @@ def paper(name, base, amp, q=78):
     Image.fromarray(a, "RGB").save(out(name), "WEBP", quality=q, method=6)
 
 
-JOBS = dict(corner=lambda: (corner(11).save(out("corner-a"), (800, 800), 78), corner(14, 118).save(out("corner-b"), (800, 800), 78)),
+# ------------------------------------------------------------ envelope paper, washes, small marks
+def cotton(name, base, amp, q=80):
+    """Heavier cotton paper than paper(): long fibres, a few flecks, gentle cloudiness."""
+    r = np.random.default_rng(102)
+    S = 512
+    n = lambda s: gf(r.random((S, S), dtype=np.float32), s, mode="wrap")
+    norm = lambda a: (a - a.mean()) / a.std()
+    fib = norm(gf(r.random((S, S)), (0.6, 4.5), mode="wrap")) + norm(gf(r.random((S, S)), (4.5, 0.6), mode="wrap"))
+    cloud = norm(n(22) + 0.6 * n(9))
+    t = norm(n(0.7)) * 0.5 + fib * 1.0 + cloud * 0.8
+    flecks = (r.random((S, S)) > 0.99993).astype(np.float32)
+    flecks = gf(flecks, 1.1) * 22
+    b = hex2(base) * 255
+    a = b[None, None] + t[..., None] * amp - flecks[..., None] * np.array([18, 24, 26])
+    Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGB").save(out(name), "WEBP", quality=q, method=6)
+
+
+def wash_band(name, tone, tone2, w=1600, h=520, seed=301, dens=0.3):
+    """A loose horizontal wash that fades to nothing at every edge, for laying between sections."""
+    p = Painting(w, h, seed)
+    rng = p.r
+    for i in range(5):
+        x = w * (0.12 + i * 0.19) + rng.uniform(-60, 60)
+        y = h * 0.5 + rng.uniform(-40, 40)
+        p.blob(x, y, rng.uniform(220, 300), rng.uniform(110, 150), rng.uniform(-0.2, 0.2), tone, dens * rng.uniform(0.7, 1.1),
+               color2=tone2, bleed=16, wet=18, edge=0.08, var=0.3)
+    p.splatter(w * 0.3, h * 0.5, 140, 10, tone2, 0.35)
+    p.splatter(w * 0.75, h * 0.45, 140, 10, tone, 0.35)
+    p.fade_edges(int(h * 0.42))
+    p.save(out(name), (w // 2, h // 2), 72)
+
+
+def count_wash():
+    p = Painting(1400, 520, 311)
+    p.blob(700, 260, 560, 170, 0, "blush", 0.32, color2="champagne", bleed=14, wet=14, edge=0.3, var=0.25)
+    p.blob(520, 250, 280, 120, 0.1, "rose", 0.14, bleed=10, wet=12, edge=0.2)
+    p.stencil([(700, 260, 470)], soft=30)
+    for sx, dirn in ((130, 1), (1270, -1)):
+        p.branch(bez((sx, 300), (sx + dirn * 130, 180), (sx + dirn * 320, 170)), leaf_len=78, spacing=34)
+        p.eucalyptus(bez((sx, 300), (sx + dirn * 140, 400), (sx + dirn * 300, 400)), size=26, spacing=34)
+        p.spray(sx, 300, -1.57 + dirn * 0.7, 140)
+    p.mask = None
+    for sx, dirn in ((130, 1), (1270, -1)):
+        p.rose(sx, 300, 116, reserve=0)
+        p.peony(sx + dirn * 120, 390, 70, tone="blush")
+        p.wildflower(sx + dirn * 110, 200, 38)
+    p.save(out("count-wash"), (1050, 390), 76)
+
+
+def check_flower():
+    p = Painting(200, 200, 321)
+    p.wildflower(100, 100, 70, tone="rose", deep="deeprose", centre="ochre", density=0.95)
+    p.save(out("check-flower"), (64, 64), 86)
+
+
+JOBS = dict(corner=lambda: [bouquet(s) for s in BOUQUETS],
             arch=arch, wreath=wreath, sprigs=lambda: (sprig("sprig-a", 15), sprig("sprig-b", 16)), flourish=small_flower,
             garland=garland, vine=vine, flap=env_flap, pocket=env_pocket, liner=env_liner, seal=wax_seal,
             mehendi=mehendi, jaan=jaan, hasta=hasta, reception=reception, vrat=vrat, cocktail=cocktail, map=venue_map,
             ph=lambda: (placeholder("placeholder-a", 201, "a"), placeholder("placeholder-b", 202, "b"), placeholder("placeholder-c", 203, "c"), placeholder("placeholder-plain", 204, "plain")),
-            petals=petals, paper=lambda: (paper("paper-ivory", "#F8F3ED", 1.5), paper("paper-white", "#FFFCF8", 1.1)))
+            petals=petals, paper=lambda: (paper("paper-ivory", "#F8F3ED", 1.5), paper("paper-white", "#FFFCF8", 1.1), cotton("paper-cotton", "#FBF4EA", 2.6)),
+            washes=lambda: (wash_band("wash-gold", "champagne", "ochre", seed=301, dens=0.32), wash_band("wash-rose", "blush", "rose", seed=302),
+                            wash_band("wash-dusk", "dusk", "rose", seed=303, dens=0.26), wash_band("wash-sage", "paleSage", "champagne", seed=304)),
+            count=count_wash, check=check_flower)
 
 if __name__ == "__main__":
     os.makedirs(EV, exist_ok=True)

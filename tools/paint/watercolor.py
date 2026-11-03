@@ -42,6 +42,8 @@ class Painting:
         self.w, self.h = w, h
         self.r = np.random.default_rng(seed)
         self.T = np.ones((h, w, 3), dtype=np.float32)
+        # optional stencil (1 = paint, 0 = keep clear) for painting around shapes laid in later
+        self.mask = None
         r = self.r
         n = lambda s: gf(r.random((h, w), dtype=np.float32), s, mode="wrap")
         norm = lambda a: (a - a.min()) / (a.max() - a.min() + 1e-6)
@@ -111,6 +113,8 @@ class Painting:
             t = np.clip(np.hypot(xx - fx, yy - fy) / rad, 0, 1)
             t = t * t * (3 - 2 * t)
             d *= near + (far - near) * t
+        if self.mask is not None:
+            d *= self.mask[y0:y1, x0:x1]
         d = (d * density)[..., None]
         A = -np.log(np.clip(color if isinstance(color, np.ndarray) else col(color), 0.02, 0.995))
         if color2 is not None:
@@ -227,6 +231,16 @@ class Painting:
                 self.blob(p[i][0] + math.cos(a) * s * 0.9, p[i][1] + math.sin(a) * s * 0.9, s, s * 0.74, a,
                           color, density * self.r.uniform(0.7, 1.15), color2=color2, wet=0.8, var=0.14, layers=6, edge=1.1)
 
+    def stencil(self, discs, soft=2.5):
+        """Keep the paper clear inside these (x, y, r) discs, so later washes go around them."""
+        im = Image.new("L", (self.w, self.h), 0)
+        d = ImageDraw.Draw(im)
+        for x, y, r in discs:
+            a = np.linspace(0, math.tau, 14, endpoint=False)
+            pts = np.stack([x + np.cos(a) * r, y + np.sin(a) * r], 1)
+            d.polygon([tuple(q) for q in self._deform(pts, 3, 0.12)], fill=255)
+        self.mask = 1 - gf(np.asarray(im, dtype=np.float32) / 255, soft)
+
     def lift(self, x, y, rx, ry=None, strength=1.0, soft=2.0):
         """Reserve paper: the painter works around whatever comes next."""
         ry = rx if ry is None else ry
@@ -239,10 +253,11 @@ class Painting:
         m = np.clip((1 - d) * max(rx, ry) / soft, 0, 1)[..., None] * strength
         self.T[y0:y1, x0:x1] = self.T[y0:y1, x0:x1] ** (1 - m)
 
-    def rose(self, x, y, r, tone="rose", deep="deeprose", dark="burgundy", density=1.0):
+    def rose(self, x, y, r, tone="rose", deep="deeprose", dark="burgundy", density=1.0, reserve=1.0):
         rng = self.r
         spin = rng.random() * math.tau
-        self.lift(x, y, r * 0.92, r * 0.88)
+        if reserve:
+            self.lift(x, y, r * 0.92, r * 0.88, reserve, 2.0 if reserve >= 1 else r * 0.3)
         # pale ground wash, wet edge
         self.blob(x, y, r * 0.95, r * 0.9, spin, "blush", 0.62 * density, color2=tone, wet=2.2, bleed=1.2, var=0.2, edge=0.7)
         # outer petals: broad, pale, each leaving a dry rim where it meets the next
@@ -272,6 +287,45 @@ class Painting:
         self.blob(x, y, r * 0.15, r * 0.13, spin, deep, 0.42 * density, color2=dark, wet=1.0, var=0.2)
         sp = [(x + math.cos(spin + t * 1.5) * r * (0.03 + 0.021 * t), y + math.sin(spin + t * 1.5) * r * (0.03 + 0.021 * t)) for t in np.linspace(0, 5, 24)]
         self.stroke(sp, r * 0.03, dark, 0.42 * density, taper=(0.5, 0.2), wobble=0.15, wet=0.6)
+
+    def peony(self, x, y, r, tone="blush", deep="rose", dark="deeprose", density=1.0):
+        """A loose, ruffled bloom: many cupped petals stacked from the rim inward."""
+        rng = self.r
+        spin = rng.random() * math.tau
+        self.lift(x, y, r * 0.8, r * 0.75, 0.45, r * 0.35)
+        # broad outer petals fanning out from the heart give a scalloped, uneven silhouette
+        n = 7
+        for i in range(n):
+            a = spin + i / n * math.tau + rng.uniform(-0.2, 0.2)
+            self.petal(x, y, a, r * rng.uniform(0.92, 1.1), r * rng.uniform(0.85, 1.05), tone, 0.34 * density, color2="blush",
+                       wet=1.4, layers=7, edge=1.8, tip=0.45, var=0.3)
+        # crumpled middle: smaller petals turned every way, darker toward the heart
+        for i in range(10):
+            a = rng.random() * math.tau
+            d = r * rng.uniform(0.12, 0.42)
+            self.blob(x + math.cos(a) * d, y + math.sin(a) * d, r * rng.uniform(0.16, 0.26), r * rng.uniform(0.09, 0.15),
+                      a + rng.uniform(-1, 1), deep, 0.22 * density, color2=tone, wet=0.8, var=0.3, layers=5, edge=2.4)
+        for i in range(8):
+            a = spin + i / 8 * math.tau + rng.uniform(-0.3, 0.3)
+            rr = r * rng.uniform(0.45, 0.75)
+            arc = [(x + math.cos(a + s) * rr, y + math.sin(a + s) * rr) for s in np.linspace(0, rng.uniform(0.35, 0.6), 6)]
+            self.stroke(arc, r * 0.035, deep, 0.22 * density, taper=(0.1, 0.1), wobble=0.6, wet=0.8, edge=0.7)
+        self.blob(x, y, r * 0.11, r * 0.1, spin, dark, 0.35 * density, color2="ochre", wet=1.0, var=0.3)
+        self.splatter(x, y, r * 0.1, 9, "ochre", 0.85, (0.8, 2.0))
+
+    def berries(self, x, y, angle, length, tone="dusk", n=7):
+        """A thin stem ending in a loose cluster of glossy berries."""
+        rng = self.r
+        tipx, tipy = x + math.cos(angle) * length, y + math.sin(angle) * length
+        self.pen([(x, y), ((x + tipx) / 2 + rng.uniform(-8, 8), (y + tipy) / 2 + rng.uniform(-8, 8)), (tipx, tipy)], "brown", 1.3, 0.6)
+        for _ in range(n):
+            a = angle + rng.uniform(-1.1, 1.1)
+            d = length * rng.uniform(0.0, 0.28)
+            bx, by = tipx + math.cos(a) * d, tipy + math.sin(a) * d
+            s = rng.uniform(5, 9)
+            self.pen([(tipx, tipy), (bx, by)], "brown", 0.8, 0.45, wobble=0.1)
+            self.blob(bx, by, s, color=tone, density=0.85, color2="burgundy", sides=8, layers=4, depth=2, wet=0.6, edge=1.6)
+            self.lift(bx - s * 0.3, by - s * 0.3, s * 0.28, None, 0.8, 1.0)
 
     def wildflower(self, x, y, r, tone="blush", deep="rose", centre="ochre", petals=5, density=0.75):
         rng = self.r
@@ -318,6 +372,13 @@ class Painting:
         rgb = np.where(a[..., None] > 1e-4, (T - (1 - a[..., None])) / np.maximum(a[..., None], 1e-4), 1.0)
         out = np.dstack([np.clip(rgb, 0, 1), a])
         return Image.fromarray((out * 255 + 0.5).astype(np.uint8), "RGBA")
+
+    def fade_edges(self, px):
+        """Let the painting thin out toward the sheet's edges instead of being cut off."""
+        yy, xx = np.mgrid[0:self.h, 0:self.w]
+        d = np.minimum(np.minimum(xx, self.w - 1 - xx), np.minimum(yy, self.h - 1 - yy)) / px
+        k = np.clip(d, 0, 1) ** 1.5
+        self.T = 1 - (1 - self.T) * k[..., None]
 
     def save(self, path, size=None, quality=82):
         im = self.rgba()

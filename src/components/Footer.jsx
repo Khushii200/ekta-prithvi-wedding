@@ -6,7 +6,7 @@ import Reveal from './Reveal.jsx'
 export default function Footer({ onReplay }) {
   return (
     <footer className="close">
-      <img className="close__corner close__corner--l" src={art('corner-b')} alt="" loading="lazy" />
+      <img className="close__corner close__corner--l" src={art('corner-c')} alt="" loading="lazy" />
       <img className="close__corner close__corner--r" src={art('corner-a')} alt="" loading="lazy" />
       <Reveal className="close__inner">
         <div className="wreath">

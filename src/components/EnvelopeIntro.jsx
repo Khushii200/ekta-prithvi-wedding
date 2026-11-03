@@ -69,8 +69,8 @@ export default function EnvelopeIntro({ onDone }) {
       role="dialog"
       aria-label="Wedding invitation envelope"
     >
-      <img className="intro__corner intro__corner--tl" src={art('corner-b')} alt="" />
-      <img className="intro__corner intro__corner--br" src={art('corner-a')} alt="" />
+      <img className="intro__corner intro__corner--tl" src={art('corner-d')} alt="" />
+      <img className="intro__corner intro__corner--br" src={art('corner-b')} alt="" />
 
       <div className="intro__stage">
         <motion.div
@@ -124,6 +124,31 @@ export default function EnvelopeIntro({ onDone }) {
           </motion.div>
 
           <motion.div className="pocket" style={{ zIndex: 3 }} animate={{ opacity: at('expand') ? 0 : 1 }} transition={{ duration: 0.5 }}>
+            {/* The side flaps and bottom flap, folded over each other */}
+            <svg className="pocket__folds" viewBox="0 0 300 200" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="fold-l" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0" stopColor="#443632" stopOpacity="0" />
+                  <stop offset="1" stopColor="#443632" stopOpacity="0.07" />
+                </linearGradient>
+                <linearGradient id="fold-r" x1="1" x2="0" y1="0" y2="0">
+                  <stop offset="0" stopColor="#443632" stopOpacity="0" />
+                  <stop offset="1" stopColor="#443632" stopOpacity="0.07" />
+                </linearGradient>
+                <linearGradient id="fold-b" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stopColor="#fffdf9" stopOpacity="0.7" />
+                  <stop offset="1" stopColor="#fffdf9" stopOpacity="0" />
+                </linearGradient>
+                <filter id="fold-soft" x="-5%" y="-5%" width="110%" height="110%">
+                  <feGaussianBlur stdDeviation="1.6" />
+                </filter>
+              </defs>
+              <path d="M0 0 L150 112 L150 124 L0 200 Z" fill="url(#fold-l)" />
+              <path d="M300 0 L150 112 L150 124 L300 200 Z" fill="url(#fold-r)" />
+              <path d="M0 200 L150 124 L300 200 Z" fill="url(#fold-b)" />
+              <path d="M2 201 L150 126 L298 201" fill="none" stroke="#443632" strokeOpacity="0.16" strokeWidth="2.4" filter="url(#fold-soft)" />
+              <path d="M0 200 L150 124 L300 200" fill="none" stroke="#fffdf9" strokeOpacity="0.9" strokeWidth="0.7" />
+            </svg>
             <img src={art('env-pocket')} alt="" />
             <span className="pocket__text">A wedding invitation</span>
           </motion.div>

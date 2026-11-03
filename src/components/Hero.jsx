@@ -8,9 +8,9 @@ export default function Hero() {
   return (
     <section id="home" className="hero">
       <img className="hero__corner hero__corner--tl" src={art('corner-a')} alt="" />
-      <img className="hero__corner hero__corner--tr" src={art('corner-b')} alt="" />
+      <img className="hero__corner hero__corner--tr" src={art('corner-c')} alt="" />
       <img className="hero__corner hero__corner--bl" src={art('corner-b')} alt="" />
-      <img className="hero__corner hero__corner--br" src={art('corner-a')} alt="" />
+      <img className="hero__corner hero__corner--br" src={art('corner-d')} alt="" />
 
       <div className="hero__grid">
         <p className="hero__eyebrow">THE WEDDING CELEBRATION OF</p>
