@@ -1,5 +1,6 @@
 import { art } from '../lib/assets.js'
 import { CLOSING_PHOTO } from '../data/photos.js'
+import { WEDDING } from '../data/events.js'
 import PhotoSlot from './PhotoSlot.jsx'
 import Reveal from './Reveal.jsx'
 
@@ -18,7 +19,7 @@ export default function Footer({ onReplay }) {
         <p className="close__line">WE CAN'T WAIT TO CELEBRATE WITH YOU</p>
         <p className="close__love">With love,</p>
         <p className="close__names">EKTA &amp; PRITHVI</p>
-        <p className="close__date">26 – 30 DECEMBER 2026</p>
+        <p className="close__date">{WEDDING.dateRange.toUpperCase()}</p>
         <img className="close__flourish" src={art('flourish')} alt="" loading="lazy" />
         <button type="button" className="link-btn" onClick={onReplay}>
           Open the envelope again

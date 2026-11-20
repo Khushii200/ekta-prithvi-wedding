@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react'
 import { art } from '../lib/assets.js'
 import { HERO_PHOTO } from '../data/photos.js'
+import { WEDDING } from '../data/events.js'
 import PhotoSlot from './PhotoSlot.jsx'
 import { scrollToId } from './Navigation.jsx'
 
@@ -27,7 +28,7 @@ export default function Hero() {
         </div>
         <div className="hero__foot">
           <p className="hero__line">Two hearts, one beautiful beginning.</p>
-          <p className="hero__date">26 – 30 DECEMBER 2026</p>
+          <p className="hero__date">{WEDDING.dateRange.toUpperCase()}</p>
         </div>
       </div>
 

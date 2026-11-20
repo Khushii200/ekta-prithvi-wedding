@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { motion, useReducedMotion, useScroll } from 'framer-motion'
-import { EVENTS, formatDate } from '../data/events.js'
+import { EVENTS, eventsSummary, formatDate } from '../data/events.js'
 import { art } from '../lib/assets.js'
 import EventCard, { TBA } from './EventCard.jsx'
 import Reveal from './Reveal.jsx'
@@ -56,12 +56,13 @@ function DayCard({ event, role }) {
 function WeddingDay({ events }) {
   const d = formatDate(events[0].date)
   const roles = events.length === 3 ? ['side', 'heart', 'side'] : events.map(() => 'side')
+  const titleId = `chapter-${events[0].date}`
   return (
-    <section className="chapter" aria-labelledby="chapter-title">
+    <section className="chapter" aria-labelledby={titleId}>
       <img className="chapter__wash" src={art('wash-rose')} alt="" aria-hidden="true" loading="lazy" />
       <Reveal className="chapter__head">
         <p className="chapter__kicker">{d.weekday}</p>
-        <h3 className="chapter__title" id="chapter-title">
+        <h3 className="chapter__title" id={titleId}>
           <span className="chapter__day">{d.day}</span>
           <span className="chapter__month">{d.month}</span>
         </h3>
@@ -93,7 +94,7 @@ export default function WeddingEvents() {
     <section id="celebrations" className="events">
       <Reveal className="section-head">
         <h2 className="h2">The Wedding Celebrations</h2>
-        <p className="prose">Six occasions across five days.</p>
+        <p className="prose">{eventsSummary()}</p>
       </Reveal>
       <div className="events__list" ref={ref}>
         {/* A thread that draws itself down the page as the guest scrolls */}

@@ -6,7 +6,11 @@ import { EVENTS, formatDate } from '../data/events.js'
 import { submitRsvp, validateRsvp } from '../lib/rsvp.js'
 import Reveal from './Reveal.jsx'
 
-const EMPTY = { name: '', phone: '', guests: 1, events: [], dietary: '', message: '', website: '' }
+// crypto.randomUUID needs a secure context, so fall back for plain-http previews.
+const newReplyId = () =>
+  globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+
+const EMPTY ={ name: '', phone: '', guests: 1, events: [], dietary: '', message: '', website: '' }
 
 function Field({ id, label, optional, error, children }) {
   return (
@@ -30,6 +34,9 @@ export default function RSVP() {
   const [status, setStatus] = useState('idle') // idle | sending | failed | done
   const [stored, setStored] = useState(false)
   const formRef = useRef(null)
+  // One ID per reply, so sending again after "Change this reply" updates the guest's row instead of adding one.
+  const replyId = useRef(null)
+  if (!replyId.current) replyId.current = newReplyId()
 
   const set = (k) => (e) => {
     setV((s) => ({ ...s, [k]: e.target.value }))
@@ -55,7 +62,7 @@ export default function RSVP() {
     setStatus('sending')
     try {
       const { website, ...data } = v
-      const res = await submitRsvp({ ...data, guests: Number(v.guests), events: v.events })
+      const res = await submitRsvp({ ...data, guests: Number(v.guests), events: v.events, replyId: replyId.current })
       setStored(res.stored)
       setStatus('done')
     } catch {
@@ -146,7 +153,9 @@ export default function RSVP() {
                         <input id={`rsvp-event-${ev.id}`} type="checkbox" checked={v.events.includes(ev.name)} onChange={() => toggle(ev.name)} />
                         <span className="choice__box" aria-hidden="true" />
                         <span className="choice__name">{ev.name}</span>
-                        <span className="choice__date">{d.day} Dec</span>
+                        <span className="choice__date">
+                          {d.day} {d.month.slice(0, 3)}
+                        </span>
                       </label>
                     )
                   })}

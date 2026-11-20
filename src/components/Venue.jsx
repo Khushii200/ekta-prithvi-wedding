@@ -13,7 +13,7 @@ export default function Venue() {
         <img src={art('map')} alt="Decorative hand-painted map with a rose marking the venue" width="800" height="608" loading="lazy" />
       </Reveal>
       <Reveal className="venue__text" delay={0.12}>
-        <h2 className="venue__name">THE CLUB</h2>
+        <h2 className="venue__name">{club.name.toUpperCase()}</h2>
         <p className="venue__loc">{club.location}</p>
         <p className="venue__for">{atClub.map((e) => e.name).join(', ').replace(/, ([^,]*)$/, ' and $1')}</p>
         <a className="btn" href={club.mapsUrl} target="_blank" rel="noopener noreferrer">

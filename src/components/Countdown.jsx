@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { WEDDING } from '../data/events.js'
+import { WEDDING, formatDate } from '../data/events.js'
 
 const TARGET = new Date(WEDDING.countdownTarget).getTime()
+const START = formatDate(WEDDING.countdownTarget.slice(0, 10))
 
 function remaining(now) {
   const ms = TARGET - now
@@ -50,7 +51,9 @@ export default function Countdown() {
               <Unit key={k} label={k} value={v} />
             ))}
           </div>
-          <p className="count__note">until 26 December 2026, India time</p>
+          <p className="count__note">
+            until {START.day} {START.month} {START.year}, India time
+          </p>
         </>
       ) : (
         <p className="count__done">THE CELEBRATIONS HAVE BEGUN!</p>
