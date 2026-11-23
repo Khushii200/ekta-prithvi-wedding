@@ -7,7 +7,6 @@ import { photo } from '../lib/assets.js'
 
 export const HERO_PHOTO = { file: 'couple-hero', label: 'Ekta and Prithvi' }
 export const WELCOME_PHOTO = { file: 'welcome', label: 'Ekta and Prithvi' }
-export const CLOSING_PHOTO = { file: 'closing', label: 'Ekta and Prithvi' }
 
 export const GALLERY = [
   { file: 'gallery-1', label: 'Couple portrait' },

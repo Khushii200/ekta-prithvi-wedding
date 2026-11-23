@@ -19,10 +19,9 @@ npm run preview    # check the production build
 | Couple photographs | Save in `src/assets/photos/` using the names below |
 | Illustrations | Save over a file in `src/assets/illustrations/` with the same base name; webp, png, jpg or svg all work. If a `-sm` copy exists (for example `mehendi-sm.webp`), replace or delete it too |
 | Background music | Replace `src/assets/music/background.mp3` (keep one audio file in the folder). The included track is a synthesised stand-in |
-| RSVP to Google Sheets | `docs/CONNECT-RSVP.md` |
 
 ### Photo file names
-`couple-hero` (hero arch, portrait), `welcome` (4:5 portrait), `closing` (square, shown in a circle), `gallery-1` to `gallery-9`. Any of .jpg .png .webp .avif. A missing photo's space is left out; the gallery and its menu link appear once at least one gallery photo exists. Gallery labels are in `src/data/photos.js`. Resize to about 1600px on the long side before adding.
+`couple-hero` (hero arch, portrait), `welcome` (4:5 portrait), `gallery-1` to `gallery-9`. Any of .jpg .png .webp .avif. A missing photo's space is left out; the gallery and its menu link appear once at least one gallery photo exists. Gallery labels are in `src/data/photos.js`. Resize to about 1600px on the long side before adding.
 
 ## Illustrations
 All art was painted in code by `tools/paint/` (`npm run paint`; needs Python with numpy, scipy and Pillow). Running it overwrites `src/assets/illustrations/`.
@@ -30,5 +29,4 @@ All art was painted in code by `tools/paint/` (`npm run paint`; needs Python wit
 ## Deploy on Vercel
 1. Push this folder to a GitHub repository.
 2. On vercel.com choose **Add New > Project** and import it. Vercel detects Vite: build `npm run build`, output `dist`.
-3. Add `VITE_RSVP_ENDPOINT` under Environment Variables if RSVP is connected.
-4. Deploy. Or run `npx vercel` from this folder.
+3. Deploy. Or run `npx vercel` from this folder.

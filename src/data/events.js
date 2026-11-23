@@ -1,5 +1,5 @@
-// Edit dates, timings and venues here. The cards, the venue section and the
-// RSVP form all read from this file.
+// Edit dates, timings and venues here. The programme and the venue section
+// both read from this file.
 //
 // time: null  shows "Details to be announced"
 // venue: null shows "Details to be announced" on the card and
@@ -80,8 +80,6 @@ export const WEDDING = {
   // Midnight at the start of 26 December in India (IST is UTC+5:30).
   countdownTarget: '2026-12-26T00:00:00+05:30',
   dateRange: '26 – 30 December 2026',
-  // The published address, used by the WhatsApp share button.
-  siteUrl: 'https://khushii200.github.io/ekta-prithvi-wedding/',
 }
 
 const parts = (iso, opts) =>

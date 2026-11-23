@@ -8,7 +8,7 @@ const LINKS = [
   { id: 'celebrations', label: 'Celebrations' },
   { id: 'venue', label: 'Venue' },
   ...(GALLERY_PHOTOS.length ? [{ id: 'gallery', label: 'Gallery' }] : []),
-  { id: 'rsvp', label: 'RSVP' },
+  { id: 'countdown', label: 'Countdown' },
 ]
 
 export const scrollToId = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
