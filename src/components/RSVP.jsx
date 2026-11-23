@@ -73,8 +73,9 @@ export default function RSVP() {
   return (
     <section id="rsvp" className="rsvp">
       <Reveal className="section-head">
+        <p className="eyebrow eyebrow--gold">Kindly Reply</p>
         <h2 className="h2">Will You Join Us?</h2>
-        <p className="prose">We would love to celebrate these special moments with you.</p>
+        <p className="section-note">We would love to celebrate these special moments with you.</p>
       </Reveal>
 
       <div className="rsvp__sheet">
@@ -186,7 +187,7 @@ export default function RSVP() {
               )}
               <button type="submit" className="btn btn--solid" disabled={status === 'sending'}>
                 <img className="btn__seal" src={art('seal')} alt="" aria-hidden="true" />
-                {status === 'sending' ? 'SENDING YOUR REPLY' : 'CONFIRM ATTENDANCE'}
+                {status === 'sending' ? 'Sending your reply' : 'Confirm attendance'}
               </button>
             </motion.form>
           )}

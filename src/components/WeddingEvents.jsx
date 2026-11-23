@@ -1,21 +1,13 @@
-import { useRef } from 'react'
-import { motion, useReducedMotion, useScroll } from 'framer-motion'
+import { MapPin } from 'lucide-react'
 import { EVENTS, eventsSummary, formatDate } from '../data/events.js'
-import { art } from '../lib/assets.js'
-import EventCard, { TBA } from './EventCard.jsx'
+import { artSet } from '../lib/assets.js'
 import Reveal from './Reveal.jsx'
+import { scrollToId } from './Navigation.jsx'
 
-const PATH = 'M20 0 C 34 90, 6 170, 20 260 S 36 430, 18 520 S 4 690, 22 780 S 34 930, 20 1000'
+const TBA = 'Details to be announced'
 
-// The light of each occasion, morning gold through to night, and the shape of its card.
-const LOOK = {
-  mehendi: { mood: 'morning', shape: 'arch' },
-  'jaan-swagat': { mood: 'afternoon' },
-  'hasta-melap': { mood: 'golden' },
-  reception: { mood: 'dusk' },
-  vrat: { mood: 'dawn', shape: 'framed' },
-  cocktail: { mood: 'night', shape: 'ticket' },
-}
+// Each single-event day gets its own treatment, so the programme never repeats one template.
+const TREATMENT = { mehendi: 'arch', vrat: 'quiet', cocktail: 'night' }
 
 // Consecutive events on the same date become one chapter.
 function byDay(events) {
@@ -28,87 +20,123 @@ function byDay(events) {
   return days
 }
 
-function DayCard({ event, role }) {
-  const look = LOOK[event.id] ?? {}
+const venueText = (v) => `${v.name}, ${v.location.split(',')[0]}`
+
+function Directions({ venue }) {
   return (
-    <motion.article
-      className={`day-card day-card--${role} mood--${look.mood}`}
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '0px 0px -10% 0px' }}
-      transition={{ duration: 0.95, ease: [0.22, 0.7, 0.3, 1], delay: role === 'heart' ? 0.12 : 0 }}
-    >
-      <div className="day-card__art">
-        <img src={art(event.art)} alt={event.artAlt} width="680" height="680" loading="lazy" decoding="async" />
+    <a className="text-link" href={venue.mapsUrl} target="_blank" rel="noopener noreferrer">
+      <MapPin size={14} strokeWidth={1.3} aria-hidden="true" /> Directions
+    </a>
+  )
+}
+
+function Leaf({ event }) {
+  const d = formatDate(event.date)
+  return (
+    <Reveal as="article" id={`day-${event.date}`} className={`leaf leaf--${TREATMENT[event.id] ?? 'arch'}`}>
+      <div className="leaf__art">
+        <img {...artSet(event.art, 360, 680)} sizes="(min-width: 900px) 420px, 68vw" alt={event.artAlt} width="680" height="680" loading="lazy" decoding="async" />
       </div>
-      <div className="day-card__body">
-        <p className={`day-card__time ${event.time ? '' : 'is-tba'}`}>{event.time ?? TBA}</p>
-        <h4 className="day-card__name">{event.name}</h4>
-        <p className="day-card__label">{event.label}</p>
-        <p className={`day-card__venue ${event.venue ? '' : 'is-tba'}`}>
-          {event.venue ? `${event.venue.name}, ${event.venue.location.split(',')[0]}` : TBA}
+      <div className="leaf__text">
+        <p className="leaf__date">
+          <span className="numeral">{d.day}</span>
+          <span>
+            {d.month} {d.year}
+            <br />
+            {d.weekday}
+          </span>
         </p>
+        <h3 className="leaf__name">{event.name}</h3>
+        <p className="leaf__label">{event.label}</p>
+        <dl className="facts">
+          <div>
+            <dt>Time</dt>
+            <dd className={event.time ? '' : 'is-tba'}>{event.time ?? TBA}</dd>
+          </div>
+          <div>
+            <dt>Venue</dt>
+            <dd className={event.venue ? '' : 'is-tba'}>
+              {event.venue ? venueText(event.venue) : TBA}
+              {event.venue && <Directions venue={event.venue} />}
+            </dd>
+          </div>
+        </dl>
       </div>
-    </motion.article>
+    </Reveal>
   )
 }
 
 function WeddingDay({ events }) {
   const d = formatDate(events[0].date)
-  const roles = events.length === 3 ? ['side', 'heart', 'side'] : events.map(() => 'side')
   const titleId = `chapter-${events[0].date}`
+  const shared = events.every((e) => e.venue === events[0].venue) ? events[0].venue : null
   return (
-    <section className="chapter" aria-labelledby={titleId}>
-      <img className="chapter__wash" src={art('wash-rose')} alt="" aria-hidden="true" loading="lazy" />
-      <Reveal className="chapter__head">
-        <p className="chapter__kicker">{d.weekday}</p>
-        <h3 className="chapter__title" id={titleId}>
-          <span className="chapter__day">{d.day}</span>
-          <span className="chapter__month">{d.month}</span>
+    <section id={`day-${events[0].date}`} className="wedding-day" aria-labelledby={titleId}>
+      <Reveal className="wedding-day__head">
+        <p className="eyebrow">{d.weekday}</p>
+        <h3 className="wedding-day__title" id={titleId}>
+          <span className="numeral">{d.day}</span>
+          <span className="wedding-day__month">{d.month}</span>
         </h3>
-        <p className="chapter__name">The Wedding Day</p>
-        <ol className="chapter__times" aria-label="Order of the day">
-          {events.map((e) => (
-            <li key={e.id}>
-              <span>{e.time ?? 'Time to be announced'}</span> {e.name}
-            </li>
-          ))}
-        </ol>
+        <p className="wedding-day__name">The Wedding Day</p>
       </Reveal>
-      <div className="chapter__grid">
+      <ol className="rites">
         {events.map((e, i) => (
-          <DayCard key={e.id} event={e} role={roles[i]} />
+          <Reveal as="li" key={e.id} className={`rite ${i === 1 ? 'rite--heart' : ''}`} delay={i * 0.08}>
+            <div className="rite__art">
+              <img {...artSet(e.art, 360, 680)} sizes="(min-width: 900px) 320px, 150px" alt={e.artAlt} width="680" height="680" loading="lazy" decoding="async" />
+            </div>
+            <div className="rite__text">
+              <p className={`rite__time ${e.time ? '' : 'is-tba'}`}>{e.time ?? TBA}</p>
+              <h4 className="rite__name">{e.name}</h4>
+              <p className="rite__label">{e.label}</p>
+              {!shared && <p className="rite__venue">{e.venue ? venueText(e.venue) : TBA}</p>}
+            </div>
+          </Reveal>
         ))}
-      </div>
+      </ol>
+      {shared && (
+        <Reveal className="wedding-day__venue">
+          <span>{venueText(shared)}</span>
+          <Directions venue={shared} />
+        </Reveal>
+      )}
     </section>
   )
 }
 
 export default function WeddingEvents() {
-  const ref = useRef(null)
-  const reduced = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 72%', 'end 72%'] })
-  let single = 0
-
+  const days = byDay(EVENTS)
   return (
     <section id="celebrations" className="events">
       <Reveal className="section-head">
+        <p className="eyebrow eyebrow--gold">The Programme</p>
         <h2 className="h2">The Wedding Celebrations</h2>
-        <p className="prose">{eventsSummary()}</p>
+        <p className="section-note">{eventsSummary()}</p>
       </Reveal>
-      <div className="events__list" ref={ref}>
-        {/* A thread that draws itself down the page as the guest scrolls */}
-        <svg className="events__thread" viewBox="0 0 40 1000" preserveAspectRatio="none" aria-hidden="true">
-          <path d={PATH} className="thread thread--ghost" />
-          <motion.path d={PATH} className="thread" style={{ pathLength: reduced ? 1 : scrollYProgress }} />
-        </svg>
-        {byDay(EVENTS).map((day) =>
-          day.length > 1 ? (
-            <WeddingDay key={day[0].date} events={day} />
-          ) : (
-            <EventCard key={day[0].id} event={day[0]} flip={single++ % 2 === 1} {...LOOK[day[0].id]} />
-          ),
-        )}
+
+      <nav className="day-nav" aria-label="Jump to a day">
+        {days.map((day) => {
+          const d = formatDate(day[0].date)
+          const id = `day-${day[0].date}`
+          return (
+            <a
+              key={id}
+              href={`#${id}`}
+              onClick={(e) => {
+                e.preventDefault()
+                scrollToId(id)
+              }}
+            >
+              <span className="numeral">{d.day}</span>
+              <small>{day.length > 1 ? 'Wedding Day' : day[0].name}</small>
+            </a>
+          )
+        })}
+      </nav>
+
+      <div className="programme">
+        {days.map((day) => (day.length > 1 ? <WeddingDay key={day[0].date} events={day} /> : <Leaf key={day[0].id} event={day[0]} />))}
       </div>
     </section>
   )

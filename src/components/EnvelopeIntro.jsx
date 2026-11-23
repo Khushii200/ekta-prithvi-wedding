@@ -69,9 +69,6 @@ export default function EnvelopeIntro({ onDone }) {
       role="dialog"
       aria-label="Wedding invitation envelope"
     >
-      <img className="intro__corner intro__corner--tl" src={art('corner-d')} alt="" />
-      <img className="intro__corner intro__corner--br" src={art('corner-b')} alt="" />
-
       <div className="intro__stage">
         <motion.div
           className={`envelope ${stage === 'idle' ? 'envelope--float' : ''}`}
@@ -96,9 +93,7 @@ export default function EnvelopeIntro({ onDone }) {
             transition={{ rotateX: { duration: 1, ease: EASE }, opacity: { duration: 0.4 } }}
           >
             <div className="flap__shade" />
-            <div className="flap__face flap__face--front">
-              <img src={art('env-flap')} alt="" />
-            </div>
+            <div className="flap__face flap__face--front" />
             <div className="flap__face flap__face--back">
               <img src={art('env-liner')} alt="" />
             </div>
@@ -149,8 +144,6 @@ export default function EnvelopeIntro({ onDone }) {
               <path d="M2 201 L150 126 L298 201" fill="none" stroke="#443632" strokeOpacity="0.16" strokeWidth="2.4" filter="url(#fold-soft)" />
               <path d="M0 200 L150 124 L300 200" fill="none" stroke="#fffdf9" strokeOpacity="0.9" strokeWidth="0.7" />
             </svg>
-            <img src={art('env-pocket')} alt="" />
-            <span className="pocket__text">A wedding invitation</span>
           </motion.div>
 
           {/* The wax seal cracks in two and the halves fall away */}
@@ -183,9 +176,9 @@ export default function EnvelopeIntro({ onDone }) {
         <AnimatePresence>
           {stage === 'idle' && (
             <motion.div className="intro__call" exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.4 }}>
-              <p className="intro__invited">YOU ARE CORDIALLY INVITED</p>
+              <p className="intro__invited">You are cordially invited</p>
               <button type="button" className="btn" onClick={open}>
-                OPEN YOUR INVITATION
+                Open your invitation
               </button>
             </motion.div>
           )}

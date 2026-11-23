@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { GALLERY } from '../data/photos.js'
+import { GALLERY_PHOTOS as GALLERY } from '../data/photos.js'
 import PhotoSlot from './PhotoSlot.jsx'
 import Reveal from './Reveal.jsx'
 
@@ -90,6 +90,7 @@ export default function Gallery() {
   return (
     <section id="gallery" className="gallery">
       <Reveal className="section-head">
+        <p className="eyebrow eyebrow--gold">Gallery</p>
         <h2 className="h2">Little Moments, Big Memories</h2>
       </Reveal>
       <div className="gallery__grid">
@@ -97,7 +98,7 @@ export default function Gallery() {
           <button
             key={item.file}
             type="button"
-            className={`gallery__item gallery__item--${item.slot}`}
+            className="gallery__item"
             onClick={(e) => {
               lastTrigger.current = e.currentTarget
               setIndex(i)

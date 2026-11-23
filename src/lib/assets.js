@@ -14,5 +14,11 @@ for (const [path, url] of Object.entries(files)) {
 }
 
 export const art = (name) => index.illustrations[name]
+// Phones download the lighter `name-sm` copy of a painting when one exists.
+export const artSet = (name, smallWidth, fullWidth) => {
+  const small = index.illustrations[`${name}-sm`]
+  const src = index.illustrations[name]
+  return small ? { src, srcSet: `${small} ${smallWidth}w, ${src} ${fullWidth}w` } : { src }
+}
 export const photo = (name) => index.photos[name]
 export const musicFile = index.music[0]

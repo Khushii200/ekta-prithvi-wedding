@@ -11,8 +11,7 @@ import Gallery from './components/Gallery.jsx'
 import RSVP from './components/RSVP.jsx'
 import Footer from './components/Footer.jsx'
 import MusicPlayer from './components/MusicPlayer.jsx'
-import Petals from './components/Petals.jsx'
-import Divider, { Bleed } from './components/Divider.jsx'
+import { GALLERY_PHOTOS } from './data/photos.js'
 
 // Every load starts at the envelope, so the browser must not restore the old scroll position.
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
@@ -38,34 +37,18 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-      {/* Roughens the edges of paper cards */}
-      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
-        <filter id="deckle">
-          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="4" />
-          <feDisplacementMap in="SourceGraphic" scale="5" />
-        </filter>
-      </svg>
-
       {!opened && <EnvelopeIntro onDone={finish} />}
 
       <div ref={mainRef} className="site">
         <Navigation visible={opened} />
-        {opened && <Petals />}
         <main>
-          <Hero />
-          <Bleed tone="rose" />
+          <Hero ready={opened} />
           <Welcome />
-          <Divider art="garland" />
           <WeddingEvents />
-          <Bleed tone="dusk" />
           <Venue />
-          <Bleed tone="sage" />
           <Countdown />
-          <Divider art="sprig-b" narrow />
-          <Gallery />
-          <Bleed tone="gold" />
+          {GALLERY_PHOTOS.length > 0 && <Gallery />}
           <RSVP />
-          <Bleed tone="rose" />
         </main>
         <Footer onReplay={replay} />
         {opened && <MusicPlayer />}

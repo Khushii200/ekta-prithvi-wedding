@@ -80,6 +80,8 @@ export const WEDDING = {
   // Midnight at the start of 26 December in India (IST is UTC+5:30).
   countdownTarget: '2026-12-26T00:00:00+05:30',
   dateRange: '26 – 30 December 2026',
+  // The published address, used by the WhatsApp share button.
+  siteUrl: 'https://khushii200.github.io/ekta-prithvi-wedding/',
 }
 
 const parts = (iso, opts) =>

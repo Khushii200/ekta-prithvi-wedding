@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import { WEDDING, formatDate } from '../data/events.js'
 
 const TARGET = new Date(WEDDING.countdownTarget).getTime()
@@ -17,17 +16,7 @@ function Unit({ label, value }) {
   return (
     <div className="count__unit">
       <div className="count__num" aria-hidden="true">
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.span
-            key={text}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-          >
-            {text}
-          </motion.span>
-        </AnimatePresence>
+        <span key={text}>{text}</span>
       </div>
       <span className="count__label">{label}</span>
     </div>
@@ -46,6 +35,7 @@ export default function Countdown() {
     <section id="countdown" className="count" aria-label="Countdown to the wedding celebrations">
       {left ? (
         <>
+          <p className="eyebrow">Counting down</p>
           <div className="count__row" role="timer" aria-label={`${left.Days} days, ${left.Hours} hours and ${left.Minutes} minutes until the celebrations`}>
             {Object.entries(left).map(([k, v]) => (
               <Unit key={k} label={k} value={v} />
@@ -56,7 +46,7 @@ export default function Countdown() {
           </p>
         </>
       ) : (
-        <p className="count__done">THE CELEBRATIONS HAVE BEGUN!</p>
+        <p className="count__done">The celebrations have begun!</p>
       )}
     </section>
   )

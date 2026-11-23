@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
+import { GALLERY_PHOTOS } from '../data/photos.js'
 
 const LINKS = [
   { id: 'home', label: 'Home' },
   { id: 'celebrations', label: 'Celebrations' },
-  { id: 'gallery', label: 'Gallery' },
+  { id: 'venue', label: 'Venue' },
+  ...(GALLERY_PHOTOS.length ? [{ id: 'gallery', label: 'Gallery' }] : []),
   { id: 'rsvp', label: 'RSVP' },
 ]
 
@@ -53,7 +55,7 @@ export default function Navigation({ visible }) {
     <header className={`nav ${scrolled ? 'nav--solid' : ''}`}>
       <nav className="nav__inner" aria-label="Main">
         <a className="nav__mark" href="#home" onClick={(e) => go(e, 'home')} aria-label="Ekta and Prithvi, back to top">
-          E <i>&amp;</i> P
+          E<i>&amp;</i>P
         </a>
         <ul className="nav__links">
           {LINKS.map((l) => (
