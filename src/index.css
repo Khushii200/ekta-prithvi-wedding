@@ -200,12 +200,6 @@ section, article { scroll-margin-top: calc(60px + env(safe-area-inset-top, 0px))
 
 /* ------------------------------------------------------- The programme */
 .events { padding-block: clamp(72px, 9vw, 120px) 0; background: var(--paper); border-block: 1px solid var(--line); }
-.day-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 680px; margin: clamp(36px, 5vw, 56px) auto 0; padding-inline: var(--gutter-l) var(--gutter-r); }
-.day-nav a { display: grid; justify-items: center; gap: 3px; min-height: 76px; padding: 8px 2px; text-align: center; color: var(--ink); text-decoration: none; border-block: 1px solid var(--line); transition: background 0.35s; }
-.day-nav a + a { border-left: 1px solid var(--line); }
-.day-nav a:hover { background: var(--sand); }
-.day-nav .numeral { font-size: 1.9rem; line-height: 1; }
-.day-nav small { font-size: 0.625rem; line-height: 1.25; letter-spacing: 0.04em; color: var(--ink-soft); }
 .programme { margin-top: clamp(56px, 7vw, 96px); display: grid; }
 
 /* one occasion, one page of the booklet */
@@ -340,12 +334,6 @@ section, article { scroll-margin-top: calc(60px + env(safe-area-inset-top, 0px))
 .leaf--night .sparkles i, .count .sparkles i { background: #ecd9b2; }
 @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(0.2) rotate(0deg); } 50% { opacity: 0.85; transform: scale(1) rotate(45deg); } }
 
-.idle { will-change: transform; }
-.idle--spin { animation: spin 70s linear infinite; }
-.idle--sway { transform-origin: 50% 20%; animation: sway 5s ease-in-out infinite alternate; }
-.idle--breathe { animation: breathe 4.6s ease-in-out infinite; }
-.idle--float { animation: float-art 5.5s ease-in-out infinite; }
-.idle--clink { transform-origin: 50% 80%; animation: clink 3.6s ease-in-out infinite; }
 @keyframes spin { to { rotate: 360deg; } }
 @keyframes sway { from { rotate: -1.8deg; } to { rotate: 1.8deg; } }
 @keyframes breathe { 0%, 100% { scale: 1; } 50% { scale: 1.04; } }
@@ -353,8 +341,6 @@ section, article { scroll-margin-top: calc(60px + env(safe-area-inset-top, 0px))
 @keyframes clink { 0%, 70%, 100% { rotate: 0deg; } 78% { rotate: -2.4deg; } 86% { rotate: 2deg; } 93% { rotate: -0.8deg; } }
 
 .leaf > .leaf__art, .leaf > .leaf__text { position: relative; z-index: 1; }
-.leaf__ghost { display: none; position: absolute; z-index: -1; top: -0.1em; right: 2%; font-size: clamp(11rem, 50vw, 25rem); line-height: 1; color: var(--sand); pointer-events: none; user-select: none; }
-.leaf--night .leaf__ghost { color: rgba(214, 195, 164, 0.09); top: 0.02em; }
 .wedding-day__band { position: absolute; inset: 0; z-index: -1; background: var(--sand); border-block: 1px solid var(--line); }
 .wedding-day > .sparkles { z-index: -1; }
 .rite { transition: background 0.4s; }
@@ -362,8 +348,6 @@ section, article { scroll-margin-top: calc(60px + env(safe-area-inset-top, 0px))
 .btn { overflow: hidden; }
 .btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(226, 201, 143, 0.5), transparent); transform: skewX(-18deg); animation: sheen 4.5s ease-in-out infinite; pointer-events: none; }
 @keyframes sheen { 0%, 62% { left: -60%; } 100% { left: 130%; } }
-.day-nav a { transition: background 0.35s, transform 0.3s var(--ease); }
-.day-nav a:active { transform: scale(0.96); }
 
 /* the seal asks to be pressed */
 .envelope--float .seal::after { content: ''; position: absolute; inset: -6%; border-radius: 50%; border: 1px solid rgba(169, 140, 90, 0.8); animation: seal-pulse 2.4s ease-out infinite; }
@@ -407,7 +391,6 @@ section, article { scroll-margin-top: calc(60px + env(safe-area-inset-top, 0px))
   .welcome--photo { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(56px, 7vw, 100px); align-items: center; }
   .welcome--photo .welcome__text { justify-items: start; text-align: left; }
 
-  .leaf__ghost { display: block; }
   .leaf { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(56px, 8vw, 110px); align-items: center; }
   .leaf__art { justify-self: end; width: min(100%, 420px); }
   .leaf__text { justify-self: start; }

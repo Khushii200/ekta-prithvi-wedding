@@ -1,0 +1,93 @@
+/* Event scenes: continuous character animation. */
+.scene { width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 10px; background: var(--ivory); box-shadow: 0 0 0 1px rgba(166, 128, 72, 0.45), 0 0 0 6px var(--paper, #fbf6ec), 0 0 0 7px rgba(166, 128, 72, 0.4), 0 18px 34px rgba(56, 41, 31, 0.16); }
+.scene svg { display: block; width: 100%; height: 100%; }
+.scene svg * { animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+.scene--rest svg * { animation-play-state: paused !important; }
+
+.a-glow { animation: s-glow 2.6s infinite; }
+.a-flick { animation: s-flick 0.42s infinite alternate; }
+
+@keyframes s-glow { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@keyframes s-flick { from { transform: scale(0.9, 1.08) skewX(-4deg); } to { transform: scale(1.08, 0.92) skewX(4deg); } }
+
+/* Layout: the scenes are the heroes of the programme. */
+.programme .leaf .leaf__art { width: min(100%, 460px); padding: 0; background: none; border-radius: 0; outline: 0; overflow: visible; justify-self: center; }
+.programme .rite { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 30px 0 32px; }
+.programme .rite__art { width: min(100%, 460px); justify-self: center; }
+
+/* Mehendi: the couple's painting, frameless, straight on the page. */
+.scene--free { overflow: visible; border-radius: 0; background: none; box-shadow: none; }
+.scene--free svg { overflow: visible; }
+.programme .leaf--arch .leaf__art, .programme .leaf--night .leaf__art { width: calc(100% + var(--gutter-l) + var(--gutter-r)); max-width: none; margin-left: calc(-1 * var(--gutter-l)); justify-self: start; }
+.m-hand { animation: m-hand 1.5s infinite; }
+.m-groom { animation: m-groom 4.5s infinite; }
+.m-bride { animation: m-bride 5.2s infinite; }
+.m-ear { animation: m-ear 2.3s infinite; }
+.m-henna { animation: m-henna 9s infinite; }
+.r-skirt { animation: r-skirt 3.6s infinite; }
+.r-arms { animation: r-arms 3.6s infinite; }
+.r-bride { animation: r-bride 3.6s infinite; }
+.r-groom { animation: r-groom 3.6s infinite; }
+.j-parasol { animation: j-parasol 3.4s infinite; }
+.j-medal { animation: j-medal 1.5s infinite; }
+.j-horse { animation: j-horse 2.6s infinite; }
+.j-groom { animation: j-groom 4s infinite; }
+.j-wave { animation: j-wave 1s infinite; }
+.j-skirt { animation: j-skirt 4s infinite; }
+.j-bride { animation: j-bride 4.4s infinite; }
+.j-ornament { animation: j-ornament 1.4s infinite; }
+.h-strand { animation: h-strand 3.2s infinite; }
+.h-strand--late { animation-delay: -0.5s; }
+.h-groom { animation: h-groom 4.6s infinite; }
+.h-bride { animation: h-bride 4.6s infinite; }
+.h-veil { animation: h-veil 4.2s infinite; }
+.c-skirt { animation: c-skirt 4s infinite; }
+.c-glitter { animation: c-glitter 1.5s infinite; }
+.c-glitter--late { animation-delay: -0.75s; }
+.c-whisky { animation: c-whisky 3.4s infinite; }
+.c-martini { animation: c-martini 3s infinite; }
+.c-groom { animation: c-groom 4.6s infinite; }
+.c-bride { animation: c-bride 4.2s infinite; }
+.v-pat { animation: v-pat 2.8s infinite; }
+.v-groom { animation: v-groom 5s infinite; }
+@keyframes m-hand { 0%, 100% { transform: rotate(-1.5deg); } 35% { transform: rotate(1.1deg) translate(2px, 1px); } 65% { transform: rotate(-0.4deg) translate(-1px, 2px); } }
+@keyframes m-groom { 0%, 100% { transform: rotate(-0.8deg); } 50% { transform: rotate(1.1deg); } }
+@keyframes m-bride { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1.2deg); } }
+@keyframes m-ear { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+@keyframes r-skirt { 0%, 100% { transform: skewX(3deg) scaleX(0.99); } 50% { transform: skewX(-3deg) scaleX(1.02); } }
+@keyframes r-arms { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
+@keyframes r-bride { 0%, 100% { transform: rotate(-1.4deg); } 50% { transform: rotate(1.5deg); } }
+@keyframes r-groom { 0%, 100% { transform: rotate(1deg); } 50% { transform: rotate(-1deg); } }
+@keyframes j-parasol { 0%, 100% { transform: rotate(-1.4deg); } 50% { transform: rotate(1.4deg); } }
+@keyframes j-medal { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes j-horse { 0%, 100% { transform: rotate(-1.5deg); } 45% { transform: rotate(1.8deg); } }
+@keyframes j-groom { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.4deg); } }
+@keyframes j-wave { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+@keyframes j-skirt { 0%, 100% { transform: skewX(1.6deg); } 50% { transform: skewX(-1.6deg); } }
+@keyframes j-bride { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.4deg); } }
+@keyframes j-ornament { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes h-strand { 0%, 100% { transform: rotate(-0.7deg); } 50% { transform: rotate(0.7deg); } }
+@keyframes h-groom { 0%, 100% { transform: rotate(-0.8deg); } 50% { transform: rotate(1deg); } }
+@keyframes h-bride { 0%, 100% { transform: rotate(0.9deg); } 50% { transform: rotate(-0.9deg); } }
+@keyframes h-veil { 0%, 100% { transform: skewX(1.1deg); } 50% { transform: skewX(-1.1deg); } }
+@keyframes c-skirt { 0%, 100% { transform: skewX(1.1deg); } 50% { transform: skewX(-1.1deg); } }
+@keyframes c-glitter { 0%, 100% { opacity: 0; } 50% { opacity: 0.95; } }
+@keyframes c-whisky { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2.2deg); } }
+@keyframes c-martini { 0%, 100% { transform: rotate(1.8deg); } 50% { transform: rotate(-2deg); } }
+@keyframes c-groom { 0%, 100% { transform: rotate(-0.9deg); } 50% { transform: rotate(1deg); } }
+@keyframes c-bride { 0%, 100% { transform: rotate(1deg); } 50% { transform: rotate(-1.1deg); } }
+@keyframes v-pat { 0%, 100% { transform: rotate(-1.4deg); } 50% { transform: rotate(1.6deg); } }
+@keyframes v-groom { 0%, 100% { transform: rotate(-0.7deg); } 50% { transform: rotate(0.8deg); } }
+@keyframes m-henna { 0%, 96% { opacity: 1; } 100% { opacity: 0; } }
+
+@media (min-width: 900px) {
+  .programme .leaf .leaf__art { justify-self: end; }
+  .programme .leaf--arch .leaf__art, .programme .leaf--night .leaf__art { width: min(100%, 560px); margin-left: 0; justify-self: end; -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
+  .programme .leaf--night .leaf__art { justify-self: start; }
+  .programme .rite { padding: 30px 18px 34px; }
+  .programme .rite__art, .programme .rite--heart .rite__art { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene svg * { animation: none !important; }
+}

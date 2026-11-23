@@ -91,13 +91,3 @@ export const formatDate = (iso) => ({
   year: parts(iso, { year: 'numeric' }),
   weekday: parts(iso, { weekday: 'long' }),
 })
-
-// "Six occasions across five days", worked out from EVENTS.
-const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve']
-const word = (n) => WORDS[n] ?? String(n)
-export function eventsSummary(events = EVENTS) {
-  const dates = events.map((e) => Date.parse(`${e.date}T00:00:00Z`))
-  const days = Math.round((Math.max(...dates) - Math.min(...dates)) / 86400000) + 1
-  const text = `${word(events.length)} ${events.length === 1 ? 'occasion' : 'occasions'} across ${word(days)} ${days === 1 ? 'day' : 'days'}.`
-  return text[0].toUpperCase() + text.slice(1)
-}

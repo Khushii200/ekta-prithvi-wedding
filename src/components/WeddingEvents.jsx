@@ -1,18 +1,15 @@
 import { useRef } from 'react'
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { MapPin } from 'lucide-react'
-import { EVENTS, eventsSummary, formatDate } from '../data/events.js'
-import { artSet } from '../lib/assets.js'
+import { EVENTS, formatDate } from '../data/events.js'
 import Reveal from './Reveal.jsx'
-import { scrollToId } from './Navigation.jsx'
 import { Item, Letters, Sparkles, Stagger } from './Motion.jsx'
+import Scene from './Scenes.jsx'
 
 const TBA = 'Details to be announced'
 
 // Each single-event day gets its own treatment, so the programme never repeats one template.
-const TREATMENT = { mehendi: 'arch', vrat: 'quiet', cocktail: 'night' }
-// Each painting keeps a small movement of its own.
-const IDLE = { mehendi: 'spin', 'jaan-swagat': 'sway', 'hasta-melap': 'breathe', reception: 'float', vrat: 'float', cocktail: 'clink' }
+const TREATMENT = { mehendi: 'arch', vrat: 'arch', cocktail: 'night' }
 
 // Consecutive events on the same date become one chapter.
 function byDay(events) {
@@ -38,25 +35,18 @@ function Directions({ venue }) {
 
 function Leaf({ event }) {
   const d = formatDate(event.date)
-  const ref = useRef(null)
-  const reduced = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  const ghostY = useTransform(scrollYProgress, [0, 1], [70, -70])
   const kind = TREATMENT[event.id] ?? 'arch'
   return (
-    <article ref={ref} id={`day-${event.date}`} className={`leaf leaf--${kind}`}>
-      <motion.span className="leaf__ghost numeral" aria-hidden="true" style={reduced ? undefined : { y: ghostY }}>
-        {d.day}
-      </motion.span>
+    <article id={`day-${event.date}`} className={`leaf leaf--${kind}`}>
       {kind === 'night' && <Sparkles count={16} seed={5} />}
       <motion.div
         className="leaf__art"
-        initial={{ opacity: 0, scale: 0.72, rotate: -10 }}
-        whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true, margin: '-12% 0px' }}
         transition={BLOOM}
       >
-        <img className={`idle idle--${IDLE[event.id]}`} {...artSet(event.art, 360, 680)} sizes="(min-width: 900px) 420px, 68vw" alt={event.artAlt} width="680" height="680" loading="lazy" decoding="async" />
+        <Scene id={event.id} />
       </motion.div>
       <Stagger className="leaf__text">
         <Item as="p" className="leaf__date">
@@ -120,12 +110,12 @@ function WeddingDay({ events }) {
           >
             <motion.div
               className="rite__art"
-              initial={{ scale: 0.6, rotate: i % 2 ? 9 : -9 }}
-              whileInView={{ scale: 1, rotate: 0 }}
+              initial={{ scale: 0.9 }}
+              whileInView={{ scale: 1 }}
               viewport={{ once: true, margin: '-10% 0px' }}
               transition={{ ...BLOOM, delay: 0.1 + i * 0.1 }}
             >
-              <img className={`idle idle--${IDLE[e.id]}`} {...artSet(e.art, 360, 680)} sizes="(min-width: 900px) 320px, 150px" alt={e.artAlt} width="680" height="680" loading="lazy" decoding="async" />
+              <Scene id={e.id} />
             </motion.div>
             <div className="rite__text">
               <p className={`rite__time ${e.time ? '' : 'is-tba'}`}>{e.time ?? TBA}</p>
@@ -153,29 +143,7 @@ export default function WeddingEvents() {
       <Reveal className="section-head">
         <p className="eyebrow eyebrow--gold">The Programme</p>
         <h2 className="h2">The Wedding Celebrations</h2>
-        <p className="section-note">{eventsSummary()}</p>
       </Reveal>
-
-      <Stagger as="nav" className="day-nav" aria-label="Jump to a day">
-        {days.map((day) => {
-          const d = formatDate(day[0].date)
-          const id = `day-${day[0].date}`
-          return (
-            <Item
-              as="a"
-              key={id}
-              href={`#${id}`}
-              onClick={(e) => {
-                e.preventDefault()
-                scrollToId(id)
-              }}
-            >
-              <span className="numeral">{d.day}</span>
-              <small>{day.length > 1 ? 'Wedding Day' : day[0].name}</small>
-            </Item>
-          )
-        })}
-      </Stagger>
 
       <div className="programme">
         {days.map((day) => (day.length > 1 ? <WeddingDay key={day[0].date} events={day} /> : <Leaf key={day[0].id} event={day[0]} />))}
